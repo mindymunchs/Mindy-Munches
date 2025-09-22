@@ -39,6 +39,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import RefundPolicy from "./pages/RefundPolicy";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ContactUs from "./pages/ContactUs";
+import ShippingPolicy from "./pages/ShippingPolicy";
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -352,6 +353,20 @@ function App() {
                   transition={pageTransition}
                 >
                   <RefundPolicy />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/shipping-policy"
+              element={
+                <motion.div
+                  initial="initial"
+                  animate="in"
+                  exit="out"
+                  variants={pageVariants}
+                  transition={pageTransition}
+                >
+                  <ShippingPolicy />
                 </motion.div>
               }
             />

@@ -104,6 +104,7 @@ const Footer = () => {
     support: [
       { name: "Contact Us", href: "/contact" },
       { name: "Returns", href: "/returns" },
+      { name: "Shipping", href: "/shipping-policy" },
     ],
     legal: [
       { name: "Privacy Policy", href: "/privacy-policy" },
