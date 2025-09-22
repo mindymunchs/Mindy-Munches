@@ -195,7 +195,6 @@ const ProductCard = ({
             </motion.div>
           )}
         </AnimatePresence>
-
         {/* Best Seller Badge */}
         {product.isBestseller && (
           <motion.div
@@ -227,7 +226,6 @@ const ProductCard = ({
             </motion.svg>
           </motion.div>
         )}
-
         {/* Featured Badge */}
         {product.isFeatured && !product.isBestseller && (
           <motion.div
@@ -243,16 +241,11 @@ const ProductCard = ({
             Featured
           </motion.div>
         )}
-
         {/* Stock Badge */}
         {product.stock <= 50 && (
           <motion.div
-            className={`absolute top-3 left-3 bg-red-500 text-white text-xs px-3 py-1 rounded-full font-medium z-10 backdrop-blur-sm ${
-              (bestseller && showBestsellerBadge) || product.featured
-                ? "mt-8"
-                : ""
-            }`}
-            initial={{ opacity: 0, x: -20, rotate: -10 }}
+            className="absolute bottom-3 right-3 bg-red-500 text-white text-xs px-3 py-1 rounded-full font-medium z-10 backdrop-blur-sm"
+            initial={{ opacity: 0, x: 20, rotate: 10 }}
             animate={{ opacity: 1, x: 0, rotate: 0 }}
             transition={{
               delay: 0.3,
@@ -263,8 +256,6 @@ const ProductCard = ({
             Low Stock
           </motion.div>
         )}
-
-        
       </div>
 
       {/* Product Details */}

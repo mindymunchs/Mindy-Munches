@@ -285,7 +285,6 @@ const ProductDetail = () => {
 
   return (
     <div className="min-h-screen bg-neutral-50">
-      
       {/* Breadcrumb */}
       <section className="bg-white border-b border-neutral-100">
         <div className="container mx-auto px-4 py-4">
@@ -521,16 +520,23 @@ const ProductDetail = () => {
                         : "Price not available"}
                     </span>
                   </div>
-
-                  {/* Original Price with strikethrough - around line 605 */}
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-lg text-neutral-500 line-through">
-                      {formatPrice(product.price * 1.2)}
-                    </span>
-                    <span className="bg-green-100 text-green-800 text-sm font-medium px-2 py-1 rounded">
-                      17% OFF
-                    </span>
-                  </div>
+                  {/* Original Price with strikethrough and calculated discount */}
+                  {product?.originalPrice &&
+                    product?.originalPrice > product?.price && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-lg text-neutral-500 line-through">
+                          {formatPrice(product.originalPrice)}
+                        </span>
+                        <span className="bg-green-100 text-green-800 text-sm font-medium px-2 py-1 rounded">
+                          {Math.round(
+                            ((product.originalPrice - product.price) /
+                              product.originalPrice) *
+                              100
+                          )}
+                          % OFF
+                        </span>
+                      </div>
+                    )}{" "}
                 </div>
               </div>
 
@@ -834,16 +840,17 @@ const ProductDetail = () => {
                     </h3>
                     <div className="bg-neutral-50 rounded-lg p-4">
                       <p className="text-neutral-700">
-                        Premium quality{" "}
-                        {product.category
-                          ? product.category.toLowerCase()
-                          : "ingredient"}
-                        , natural spices, and traditional seasonings. No
-                        artificial preservatives or additives.
+                        {product.shortDescription ||
+                          `Premium quality ${
+                            product.category
+                              ? product.category.toLowerCase()
+                              : "ingredient"
+                          }, natural spices, and traditional seasonings. No artificial preservatives or additives.`}
                       </p>
                     </div>
                   </div>
                 )}
+
                 {activeTab === "nutrition" && (
                   <div className="space-y-4">
                     <h3 className="text-xl font-semibold text-neutral-800">
@@ -928,6 +935,97 @@ const ProductDetail = () => {
                     </div>
                   </div>
                 )}
+
+                {/* {activeTab === "reviews" && (
+                  <div className="space-y-6">
+                    <h3 className="text-xl font-semibold text-neutral-800">
+                      Customer Reviews
+                    </h3> */}
+
+                {/* Reviews Count and Average Rating */}
+                {/* {product.ratings && (
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl font-semibold text-neutral-800">
+                            {product.ratings.average.toFixed(1)}
+                          </span>
+                          <div className="flex text-yellow-400">
+                            {[...Array(5)].map((_, i) => (
+                              <span
+                                key={i}
+                                className={
+                                  i < Math.round(product.ratings.average)
+                                    ? "text-yellow-400"
+                                    : "text-gray-300"
+                                }
+                              >
+                                ⭐
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        <span className="text-neutral-600">
+                          ({product.ratings.count} review
+                          {product.ratings.count !== 1 ? "s" : ""})
+                        </span>
+                      </div>
+                    )} */}
+
+                {/* <div className="space-y-4">
+                      {product.reviews && product.reviews.length > 0 ? (
+                        product.reviews.map((review) => (
+                          <div
+                            key={review._id}
+                            className="border border-neutral-200 rounded-lg p-4"
+                          >
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                                <span className="text-primary-600 font-medium text-sm">
+                                  {review.user?.name
+                                    ? review.user.name.charAt(0).toUpperCase()
+                                    : "U"}
+                                </span>
+                              </div>
+                              <div>
+                                <div className="font-medium text-neutral-800">
+                                  {review.user?.name || "Anonymous User"}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <div className="flex text-yellow-400 text-sm">
+                                    {[...Array(5)].map((_, i) => (
+                                      <span
+                                        key={i}
+                                        className={
+                                          i < review.rating
+                                            ? "text-yellow-400"
+                                            : "text-gray-300"
+                                        }
+                                      >
+                                        ⭐
+                                      </span>
+                                    ))}
+                                  </div>
+                                  <span className="text-xs text-neutral-500">
+                                    {new Date(
+                                      review.createdAt
+                                    ).toLocaleDateString()}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            <p className="text-neutral-600">{review.comment}</p>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-8 text-neutral-500">
+                          <p>
+                            No reviews yet. Be the first to review this product!
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )} */}
               </motion.div>
             </AnimatePresence>
           </div>

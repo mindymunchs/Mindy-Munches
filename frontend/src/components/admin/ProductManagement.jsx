@@ -16,7 +16,7 @@ const ProductManagement = () => {
     shortDescription: "",
     price: "",
     originalPrice: "",
-    category: "superfoods",
+    category: "makhana",
     images: [{ url: "", alt: "", isPrimary: true }],
     stock: "",
     sku: "",
