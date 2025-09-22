@@ -353,15 +353,10 @@ const Auth = () => {
       >
         {/* Header */}
         <div className="text-center mb-8">
-          <Link
-            to="/"
-            className="inline-block mb-6 text-2xl font-bold text-orange-600 hover:text-orange-700 transition-colors"
-          >
-            Mindy Munchs
-          </Link>
+          
           
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            {isLogin ? "Welcome Back!" : "Create Account"}
+            {isLogin ? "Welcome!" : "Create Account"}
           </h1>
           
           <p className="text-gray-600 text-sm">
@@ -386,7 +381,7 @@ const Auth = () => {
         )}
 
         {/* Google OAuth Button */}
-        <div className="mb-6">
+        <div className="mb-6 items-center">
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={handleGoogleError}
