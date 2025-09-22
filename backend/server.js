@@ -34,7 +34,8 @@ const corsOptions = {
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     process.env.FRONTEND_URL,
-    "https://www.mindymunchs.com/"
+    'https://www.mindymunchs.com',
+    'https://mindymunchs.com',
   ],
   credentials: true,
   optionsSuccessStatus: 200,
