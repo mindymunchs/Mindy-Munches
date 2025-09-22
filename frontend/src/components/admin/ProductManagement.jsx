@@ -1131,7 +1131,7 @@ const ProductManagement = () => {
                 {/* Descriptions */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Short Description
+                    Ingredients
                   </label>
                   <textarea
                     name="shortDescription"
@@ -1139,7 +1139,7 @@ const ProductManagement = () => {
                     onChange={handleInputChange}
                     rows="2"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    placeholder="Brief product description..."
+                    placeholder="Add Ingredients..."
                   />
                 </div>
 
