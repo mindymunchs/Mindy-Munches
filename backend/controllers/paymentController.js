@@ -144,9 +144,9 @@ exports.verifyPayment = async (req, res) => {
           totalAmount: orderDetails.totalAmount,
           shippingAddress: savedOrder.shippingAddress,
         });
-        console.log('Order confirmation email sent via SendPulse');
+        console.log("Order confirmation email sent via SendPulse");
       } catch (emailError) {
-        console.error(' Brevo email failed:', emailError);
+        console.error(" Brevo email failed:", emailError);
       }
     }
 
@@ -172,3 +172,99 @@ exports.verifyPayment = async (req, res) => {
     });
   }
 };
+// Webhook handler for Razorpay events
+exports.handleWebhook = async (req, res) => {
+  try {
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    const webhookSignature = req.headers["x-razorpay-signature"];
+    const webhookBody = JSON.stringify(req.body);
+
+    // Verify webhook signature
+    const expectedSignature = crypto
+      .createHmac("sha256", webhookSecret)
+      .update(webhookBody)
+      .digest("hex");
+
+    if (expectedSignature !== webhookSignature) {
+      console.log("❌ Invalid webhook signature");
+      return res.status(400).send("Invalid signature");
+    }
+
+    console.log("✅ Webhook verified:", req.body.event);
+
+    // Handle different payment events
+    const { event, payload } = req.body;
+
+    switch (event) {
+      case "payment.captured":
+        await handlePaymentCaptured(payload.payment.entity);
+        break;
+
+      case "payment.failed":
+        await handlePaymentFailed(payload.payment.entity);
+        break;
+
+      case "order.paid":
+        await handleOrderPaid(payload.order.entity);
+        break;
+
+      default:
+        console.log("Unhandled event:", event);
+    }
+
+    res.status(200).send("OK");
+  } catch (error) {
+    console.error("❌ Webhook error:", error);
+    res.status(500).send("Webhook error");
+  }
+};
+
+// Webhook event handlers
+async function handlePaymentCaptured(payment) {
+  try {
+    console.log("💰 Payment captured via webhook:", payment.id);
+
+    // Update order status if payment was successful
+    const order = await Order.findOne({
+      razorpayPaymentId: payment.id,
+    });
+
+    if (order) {
+      order.paymentStatus = "captured";
+      order.orderStatus = "confirmed";
+      await order.save();
+      console.log("📦 Order status updated:", order.orderNumber);
+    }
+  } catch (error) {
+    console.error("Error handling payment captured:", error);
+  }
+}
+
+async function handlePaymentFailed(payment) {
+  try {
+    console.log("❌ Payment failed via webhook:", payment.id);
+
+    // Update order status if payment failed
+    const order = await Order.findOne({
+      razorpayOrderId: payment.order_id,
+    });
+
+    if (order) {
+      order.paymentStatus = "failed";
+      order.orderStatus = "cancelled";
+      await order.save();
+      console.log("🚫 Order marked as failed:", order.orderNumber);
+    }
+  } catch (error) {
+    console.error("Error handling payment failed:", error);
+  }
+}
+
+async function handleOrderPaid(order) {
+  try {
+    console.log("📦 Order paid via webhook:", order.id);
+    // Additional order processing if needed
+  } catch (error) {
+    console.error("Error handling order paid:", error);
+  }
+}

@@ -8,5 +8,8 @@ const { authenticate } = require('../middleware/auth');
 router.post('/create-razorpay-order', authenticate, paymentController.createRazorpayOrder);
 router.post('/verify-payment', authenticate, paymentController.verifyPayment);
 
+router.post('/webhook/razorpay', paymentController.handleWebhook);
+
+
 
 module.exports = router;
