@@ -6,32 +6,40 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       react({
-        jsxRuntime: "automatic", // or 'classic' if automatic doesn't work
+        jsxRuntime: "automatic",
       }),
       tailwindcss(),
     ],
     server: {
       port: 3000,
     },
-    external: ["react", "react-dom"],
+    // REMOVE this line - external is for library builds, not apps
+    // external: ["react", "react-dom"],
+    
     optimizeDeps: {
-      include: ["react/jsx-runtime"],
+      include: ["react/jsx-runtime", "framer-motion"], // Include framer-motion
+      // REMOVE exclude for framer-motion - you can't include and exclude same package
     },
-    // Build-time console removal for production
+    
     esbuild: {
-      pure: mode === 'production' ? ['console.log', 'console.debug', 'console.info', 'console.warn'] : [],
-      drop: mode === 'production' ? ['console', 'debugger'] : []
+      pure:
+        mode === "production"
+          ? ["console.log", "console.debug", "console.info", "console.warn"]
+          : [],
+      drop: mode === "production" ? ["console", "debugger"] : [],
     },
-    // Build configuration
+    
     build: {
-      // Remove console statements during minification
-      minify: 'esbuild',
+      minify: "esbuild",
       rollupOptions: {
         output: {
-          // Clean up console statements in production chunks
           manualChunks: undefined,
-        }
-      }
-    }
-  }
+        },
+      },
+      // MOVE commonjsOptions to the right place
+      commonjsOptions: {
+        include: [/framer-motion/, /node_modules/],
+      },
+    },
+  };
 });
