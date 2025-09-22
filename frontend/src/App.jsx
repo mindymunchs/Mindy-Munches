@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import useAuthStore from "./store/authStore";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 // Console override for production - ADD THIS AT THE TOP
 if (process.env.NODE_ENV === 'production') {
@@ -62,6 +63,7 @@ function App() {
   }, [initializeAuth]);
 
   return (
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || ""}>
     <div className="min-h-screen bg-neutral-50 flex flex-col overflow-x-hidden max-w-full">
       <ScrollToTop />
       <Navbar />
@@ -359,6 +361,7 @@ function App() {
       <Footer />
       <BottomBar />
     </div>
+    </GoogleOAuthProvider>
   );
 }
 

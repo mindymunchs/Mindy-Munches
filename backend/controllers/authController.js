@@ -3,8 +3,12 @@ const bcrypt = require("bcryptjs");
 const { validationResult } = require("express-validator");
 const User = require("../models/User");
 const emailService = require("../services/emailService");
-const crypto = require("crypto"); // Add this import
+const crypto = require("crypto");
 const Guest = require("../models/Guest");
+const { OAuth2Client } = require('google-auth-library'); // Add this import
+
+// Initialize Google OAuth client
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Generate JWT token
 const generateToken = (userId) => {
@@ -49,7 +53,6 @@ const register = async (req, res) => {
     try {
       // Check if email already exists in Guest collection
       const existingGuest = await Guest.findOne({ email: user.email });
-
       if (!existingGuest) {
         // Create new guest subscriber
         const guest = new Guest({
@@ -154,6 +157,231 @@ const login = async (req, res) => {
   }
 };
 
+// ======= GOOGLE OAUTH METHODS =======
+
+// Google OAuth callback handler (server-side flow)
+const googleCallback = async (req, res) => {
+  try {
+    // User is attached to req by Passport
+    if (!req.user) {
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth?error=oauth_failed`);
+    }
+
+    const user = req.user;
+    
+    // Generate JWT token
+    const token = generateToken(user._id);
+    
+    // Update last login
+    user.lastLogin = new Date();
+    await user.save();
+
+    console.log(`✅ Google OAuth login successful: ${user.email}`);
+
+    // Redirect to frontend with token
+    const redirectURL = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth?token=${token}&success=true`;
+    res.redirect(redirectURL);
+
+  } catch (error) {
+    console.error('Google OAuth callback error:', error);
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth?error=oauth_callback_failed`);
+  }
+};
+
+// Google OAuth success handler
+const googleSuccess = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Google authentication failed'
+      });
+    }
+
+    const token = generateToken(req.user._id);
+    
+    res.json({
+      success: true,
+      message: 'Google authentication successful',
+      data: {
+        token,
+        user: {
+          id: req.user._id,
+          name: req.user.name,
+          email: req.user.email,
+          role: req.user.role,
+          profilePicture: req.user.profilePicture,
+          authProvider: req.user.authProvider
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Google success error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to complete Google authentication',
+      error: error.message,
+    });
+  }
+};
+
+// Verify Google OAuth token (client-side flow)
+const verifyGoogleToken = async (req, res) => {
+  try {
+    const { credential } = req.body;
+    
+    if (!credential) {
+      return res.status(400).json({
+        success: false,
+        message: 'Google credential is required'
+      });
+    }
+
+    // Verify the Google token
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { sub: googleId, email, name, picture } = payload;
+
+    console.log('Google token verified for:', email);
+
+    // Check if user already exists with this Google ID
+    let user = await User.findOne({ googleId });
+
+    if (user) {
+      // User exists, update last login
+      user.lastLogin = new Date();
+      await user.save();
+    } else {
+      // Check if user exists with same email
+      user = await User.findOne({ email });
+      
+      if (user) {
+        // Link Google account to existing user
+        user.googleId = googleId;
+        user.authProvider = 'google';
+        user.profilePicture = picture;
+        user.lastLogin = new Date();
+        await user.save();
+      } else {
+        // Create new user
+        user = new User({
+          googleId,
+          name,
+          email,
+          profilePicture: picture,
+          authProvider: 'google',
+          isVerified: true,
+          lastLogin: new Date()
+        });
+
+        await user.save();
+
+        // Auto-subscribe to newsletter
+        try {
+          const existingGuest = await Guest.findOne({ email });
+          if (!existingGuest) {
+            const guest = new Guest({
+              email,
+              name,
+              newsletterSubscribed: true,
+            });
+            await guest.save();
+          }
+
+          await emailService.sendWelcomeEmail(email, name);
+          console.log(`✅ Google user auto-subscribed: ${email}`);
+        } catch (emailError) {
+          console.error("Google user newsletter subscription error:", emailError);
+        }
+      }
+    }
+
+    // Generate JWT token
+    const token = generateToken(user._id);
+
+    res.json({
+      success: true,
+      message: 'Google authentication successful',
+      data: {
+        token,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          profilePicture: user.profilePicture,
+          authProvider: user.authProvider
+        },
+      },
+    });
+
+  } catch (error) {
+    console.error('Google token verification error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Google authentication failed',
+      error: error.message,
+    });
+  }
+};
+
+// Refresh JWT token
+const refreshToken = async (req, res) => {
+  try {
+    const { token } = req.body;
+    
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: 'Token is required'
+      });
+    }
+
+    // Verify the existing token (even if expired)
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, { ignoreExpiration: true });
+    
+    // Find the user
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Generate new token
+    const newToken = generateToken(user._id);
+
+    res.json({
+      success: true,
+      message: 'Token refreshed successfully',
+      data: {
+        token: newToken,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
+      },
+    });
+
+  } catch (error) {
+    console.error('Token refresh error:', error);
+    res.status(401).json({
+      success: false,
+      message: 'Invalid or expired token',
+      error: error.message,
+    });
+  }
+};
+
+// ======= EXISTING METHODS =======
+
 // Demo login
 const demoLogin = async (req, res) => {
   try {
@@ -176,7 +404,6 @@ const demoLogin = async (req, res) => {
         password: "demo123",
         role: type === "admin" ? "admin" : "user",
       });
-
       await user.save();
     }
 
@@ -278,7 +505,6 @@ const changePassword = async (req, res) => {
 
     // Verify current password
     const isCurrentPasswordValid = await user.comparePassword(currentPassword);
-
     if (!isCurrentPasswordValid) {
       return res.status(400).json({
         success: false,
@@ -305,13 +531,12 @@ const changePassword = async (req, res) => {
 };
 
 // Forgot password
-// controllers/authController.js
 const forgotPassword = async (req, res) => {
   let user;
   try {
     const { email } = req.body;
 
-    // 1️⃣ Find user
+    // Find user
     user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({
@@ -320,15 +545,15 @@ const forgotPassword = async (req, res) => {
       });
     }
 
-    // 2️⃣ Create reset token & save without validation
+    // Create reset token & save without validation
     const resetToken = user.getResetPasswordToken();
     await user.save({ validateBeforeSave: false });
 
-    // 3️⃣ Build complete reset URL with query parameter
+    // Build complete reset URL with query parameter
     const baseURL = process.env.FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
     const resetURL = `${baseURL}/reset-password?token=${resetToken}`;
 
-    // 4️⃣ Send email with complete URL (not just token)
+    // Send email with complete URL (not just token)
     await emailService.sendPasswordResetEmail(user.email, resetURL);
     console.log(`Password reset email sent to ${user.email}`);
 
@@ -336,10 +561,9 @@ const forgotPassword = async (req, res) => {
       success: true,
       message: "Password reset instructions sent to your email",
     });
-
   } catch (error) {
     console.error("Forgot password error:", error);
-    
+
     // Roll back token fields if anything fails
     if (user) {
       user.passwordResetToken = undefined;
@@ -354,7 +578,6 @@ const forgotPassword = async (req, res) => {
     });
   }
 };
-
 
 // Reset password
 const resetPassword = async (req, res) => {
@@ -406,4 +629,9 @@ module.exports = {
   changePassword,
   forgotPassword,
   resetPassword,
+  // Google OAuth methods
+  googleCallback,
+  googleSuccess,
+  verifyGoogleToken,
+  refreshToken,
 };
