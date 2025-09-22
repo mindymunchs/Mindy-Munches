@@ -15,15 +15,8 @@ const ProductCard = ({
   const { isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
 
-  // State for size selection and image hovering
-  const [selectedSize, setSelectedSize] = useState("500gm");
+  // State for image hovering only (size selection removed)
   const [isHovered, setIsHovered] = useState(false);
-
-  // Map prices for sizes - assuming product.price is base price for 500gm
-  const priceMap = {
-    "500gm": product.price,
-    "1kg": product.price * 2,
-  };
 
   // Helper function to resolve image URLs
   const resolveImageUrl = (imagePath) => {
@@ -280,15 +273,15 @@ const ProductCard = ({
           >
             {product.name}
           </motion.h3>
-          {/* Price Display - around line 250 */}
+          {/* Price Display - optimized */}
           <motion.span
             className="font-semibold text-primary-600 text-base leading-tight whitespace-nowrap"
-            key={selectedSize}
+            key={product.id || product._id} // Use product ID for unique key
             initial={{ opacity: 0, x: 10, scale: 0.8 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
             transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
-            {formatPrice(priceMap[selectedSize])}
+            {formatPrice(product.price)}
           </motion.span>
         </div>
 
@@ -369,7 +362,8 @@ const ProductCard = ({
           </span>
         </motion.div>
 
-        {/* Size Selector */}
+        {/* Weight Display (replaces Size Selector) */}
+        {/* Weight Display (replaces Size Selector) */}
         <motion.div
           className="mb-4"
           initial={{ opacity: 0, y: 15 }}
@@ -380,22 +374,12 @@ const ProductCard = ({
             ease: [0.25, 0.46, 0.45, 0.94],
           }}
         >
-          <motion.select
-            value={selectedSize}
-            onChange={(e) => {
-              e.stopPropagation();
-              setSelectedSize(e.target.value);
-            }}
-            className="w-full border border-gray-300 rounded-lg py-2.5 px-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
-            onClick={(e) => e.stopPropagation()}
-            whileFocus={{
-              scale: 1.02,
-              transition: { duration: 0.2 },
-            }}
-          >
-            <option value="500gm">500gm</option>
-            <option value="1kg">1000gm</option>
-          </motion.select>
+          <div className="text-sm text-gray-600 mb-3">
+            Weight:{" "}
+            {product.weight && typeof product.weight === "object"
+              ? `${product.weight.value}${product.weight.unit}`
+              : product.weight || "N/A"}
+          </div>
         </motion.div>
 
         {/* Add to Cart Button */}

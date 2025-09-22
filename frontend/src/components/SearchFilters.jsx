@@ -2,24 +2,53 @@ import { useState, useEffect } from 'react'
 //eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion'
 
-const SearchFilters = ({ 
-  products, 
-  onFilteredProducts, 
-  searchTerm, 
+const SearchFilters = ({
+  products,
+  onFilteredProducts,
+  searchTerm,
   setSearchTerm,
-  selectedCategory, 
+  selectedCategory,
   setSelectedCategory,
-  sortBy, 
+  sortBy,
   setSortBy,
-  showFilters, 
-  setShowFilters 
+  showFilters,
+  setShowFilters
 }) => {
-  const [priceRange, setPriceRange] = useState([0, 50000])
+  // CHANGED: Set initial max price to 5000
+  const [priceRange, setPriceRange] = useState([0, 5000])
   const [selectedRating, setSelectedRating] = useState(0)
   const [inStockOnly, setInStockOnly] = useState(false)
   const [featuredOnly, setFeaturedOnly] = useState(false)
+  const [categories, setCategories] = useState(['All']) // Dynamic categories
 
-  const categories = ['All', 'Makhana', 'Sattu']
+  // Extract unique categories from products data
+  useEffect(() => {
+    if (products.length > 0) {
+      console.log('Products data sample:', products[0]) // Debug log
+      
+      const uniqueCategories = new Set(['All']) // Start with 'All'
+      
+      products.forEach(product => {
+        if (product.category) {
+          // Handle different category formats
+          let categoryName = product.category
+          
+          if (typeof product.category === 'object') {
+            categoryName = product.category.name || product.category.title || product.category.label
+          }
+          
+          if (categoryName && categoryName !== 'All') {
+            uniqueCategories.add(categoryName)
+          }
+        }
+      })
+      
+      const categoriesArray = Array.from(uniqueCategories)
+      console.log('Extracted categories:', categoriesArray) // Debug log
+      setCategories(categoriesArray)
+    }
+  }, [products])
+
   const sortOptions = [
     { value: 'name', label: 'Name A-Z' },
     { value: 'name-desc', label: 'Name Z-A' },
@@ -30,37 +59,74 @@ const SearchFilters = ({
     { value: 'newest', label: 'Newest First' }
   ]
 
-  // Calculate price range based on products
+  // CHANGED: Calculate price range based on products with max cap of 5000
   useEffect(() => {
     if (products.length > 0) {
-      const prices = products.map(p => p.price)
-      const minPrice = Math.min(...prices)
-      const maxPrice = Math.max(...prices)
-      setPriceRange([minPrice, maxPrice])
+      const prices = products.map(p => p.price || 0).filter(price => price > 0)
+      if (prices.length > 0) {
+        const minPrice = Math.min(...prices)
+        const maxPrice = Math.min(Math.max(...prices), 5000) // Cap at 5000
+        setPriceRange([0, maxPrice]) // Start from 0 to maxPrice (capped at 5000)
+      }
     }
   }, [products])
 
   // Apply all filters
   useEffect(() => {
+    if (!products.length || typeof onFilteredProducts !== 'function') {
+      return
+    }
+
+    console.log('Applying filters:', {
+      searchTerm,
+      selectedCategory,
+      totalProducts: products.length
+    }) // Debug log
+
     let filtered = [...products]
 
     // Text search
-    if (searchTerm) {
+    if (searchTerm && searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase().trim()
       filtered = filtered.filter(product =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchTerm.toLowerCase())
+        (product.name && product.name.toLowerCase().includes(searchLower)) ||
+        (product.description && product.description.toLowerCase().includes(searchLower)) ||
+        (product.category && 
+          typeof product.category === 'string' && 
+          product.category.toLowerCase().includes(searchLower)) ||
+        (product.category && 
+          typeof product.category === 'object' && 
+          (product.category.name || product.category.title || '').toLowerCase().includes(searchLower))
       )
     }
 
-    // Category filter
+    // Category filter - IMPROVED LOGIC
     if (selectedCategory !== 'All') {
-      filtered = filtered.filter(product => product.category === selectedCategory)
+      filtered = filtered.filter(product => {
+        if (!product.category) return false
+        
+        let productCategory = product.category
+        
+        // Handle object categories
+        if (typeof product.category === 'object') {
+          productCategory = product.category.name || product.category.title || product.category.label
+        }
+        
+        // Convert to string and compare
+        const categoryStr = String(productCategory).trim()
+        const selectedStr = String(selectedCategory).trim()
+        
+        console.log('Comparing categories:', { productCategory: categoryStr, selectedCategory: selectedStr }) // Debug log
+        
+        return categoryStr === selectedStr
+      })
     }
 
+    console.log('After category filter:', filtered.length) // Debug log
+
     // Price range filter
-    filtered = filtered.filter(product => 
-      product.price >= priceRange[0] && product.price <= priceRange[1]
+    filtered = filtered.filter(product =>
+      (product.price || 0) >= priceRange[0] && (product.price || 0) <= priceRange[1]
     )
 
     // Rating filter
@@ -70,320 +136,257 @@ const SearchFilters = ({
 
     // Stock filter
     if (inStockOnly) {
-      filtered = filtered.filter(product => product.stock > 0)
+      filtered = filtered.filter(product => (product.stock || 0) > 0)
     }
 
     // Featured filter
     if (featuredOnly) {
-      filtered = filtered.filter(product => product.featured)
+      filtered = filtered.filter(product => product.featured || product.isFeatured)
     }
 
     // Sort products
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'name':
-          return a.name.localeCompare(b.name)
+          return (a.name || '').localeCompare(b.name || '')
         case 'name-desc':
-          return b.name.localeCompare(a.name)
+          return (b.name || '').localeCompare(a.name || '')
         case 'price-low':
-          return a.price - b.price
+          return (a.price || 0) - (b.price || 0)
         case 'price-high':
-          return b.price - a.price
+          return (b.price || 0) - (a.price || 0)
         case 'rating':
           return (b.rating || 5) - (a.rating || 5)
         case 'featured':
-          return (b.featured ? 1 : 0) - (a.featured ? 1 : 0)
+          const aFeatured = a.featured || a.isFeatured ? 1 : 0
+          const bFeatured = b.featured || b.isFeatured ? 1 : 0
+          return bFeatured - aFeatured
         case 'newest':
-          return (b.id || 0) - (a.id || 0)
+          const dateA = new Date(a.createdAt || a.dateAdded || a.created || 0)
+          const dateB = new Date(b.createdAt || b.dateAdded || b.created || 0)
+          return dateB - dateA
         default:
           return 0
       }
     })
 
+    console.log('Final filtered products:', filtered.length) // Debug log
     onFilteredProducts(filtered)
   }, [
-    products, 
-    searchTerm, 
-    selectedCategory, 
-    priceRange, 
-    selectedRating, 
-    inStockOnly, 
-    featuredOnly, 
-    sortBy, 
+    products,
+    searchTerm,
+    selectedCategory,
+    priceRange,
+    selectedRating,
+    inStockOnly,
+    featuredOnly,
+    sortBy,
     onFilteredProducts
   ])
 
   const formatPrice = (price) => {
-    return `₹${(price / 100).toLocaleString('en-IN')}`
+    return `₹${price.toLocaleString('en-IN')}`
   }
 
+  // CHANGED: Update clearAllFilters to use 5000 as max
   const clearAllFilters = () => {
     setSearchTerm('')
     setSelectedCategory('All')
     setSortBy('name')
-    setPriceRange([0, 50000])
+    setPriceRange([0, 5000]) // Changed from 50000 to 5000
     setSelectedRating(0)
     setInStockOnly(false)
     setFeaturedOnly(false)
   }
 
+  // CHANGED: Update hasActiveFilters check for 5000 max
   const hasActiveFilters = searchTerm || 
-                          selectedCategory !== 'All' || 
-                          sortBy !== 'name' || 
-                          priceRange[0] !== 0 || 
-                          priceRange[1] !== 50000 || 
-                          selectedRating > 0 || 
-                          inStockOnly || 
-                          featuredOnly
+    selectedCategory !== 'All' || 
+    sortBy !== 'name' || 
+    priceRange[0] !== 0 || 
+    priceRange[1] !== 5000 || // Changed from 50000 to 5000
+    selectedRating > 0 || 
+    inStockOnly || 
+    featuredOnly
 
   return (
-    <div className="bg-white border-b border-neutral-100 sticky top-16 z-40">
-      <div className="container mx-auto px-4">
-        {/* Filter Toggle Bar */}
-        <div className="flex items-center justify-between py-4">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
-                showFilters 
-                  ? 'bg-primary-50 border-primary-300 text-primary-700' 
-                  : 'border-neutral-300 text-neutral-700 hover:bg-neutral-50'
-              }`}
+    <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+      {/* Debug info - Remove in production */}
+      
+      {/* Search and Sort Row */}
+      <div className="flex flex-col lg:flex-row gap-4 items-center mb-6">
+        {/* Search Input */}
+        <div className="flex-1 min-w-0">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+            <svg
+              className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z" />
-              </svg>
-              <span className="font-medium">Advanced Filters</span>
-              {hasActiveFilters && (
-                <span className="bg-primary-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  !
-                </span>
-              )}
-            </button>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {/* Quick Sort */}
-            <div className="hidden sm:flex items-center gap-2">
-              <span className="text-sm text-neutral-600">Sort:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-3 py-1 border border-neutral-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-300 focus:border-primary-500 outline-none bg-white"
-              >
-                {sortOptions.map(option => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
-            </div>
-
-            {hasActiveFilters && (
-              <button
-                onClick={clearAllFilters}
-                className="text-sm text-red-600 hover:text-red-700 font-medium px-3 py-2 rounded-lg hover:bg-red-50 transition-colors"
-              >
-                Clear All
-              </button>
-            )}
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
           </div>
         </div>
 
-        {/* Collapsible Advanced Filters */}
-        <AnimatePresence>
-          {showFilters && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="overflow-hidden border-t border-neutral-100"
-            >
-              <div className="py-6 space-y-6">
-                {/* Search Bar */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-neutral-700">
-                    Search Products
-                  </label>
-                  <div className="relative max-w-md">
-                    <input
-                      type="text"
-                      placeholder="Search by name, category, or description..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-10 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-300 focus:border-primary-500 outline-none transition-colors"
-                    />
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <svg className="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                      </svg>
-                    </div>
-                    {searchTerm && (
-                      <button
-                        onClick={() => setSearchTerm('')}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                      >
-                        <svg className="w-4 h-4 text-neutral-400 hover:text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    )}
-                  </div>
-                </div>
+        {/* Sort Dropdown */}
+        <div className="flex items-center gap-2">
+          <label htmlFor="sort" className="text-sm font-medium text-gray-700 whitespace-nowrap">
+            Sort by:
+          </label>
+          <select
+            id="sort"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          >
+            {sortOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {/* Category Filter */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-neutral-700">
-                      Category
-                    </label>
-                    <select
-                      value={selectedCategory}
-                      onChange={(e) => setSelectedCategory(e.target.value)}
-                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-300 focus:border-primary-500 outline-none bg-white"
-                    >
-                      {categories.map(category => (
-                        <option key={category} value={category}>{category}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Price Range */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-neutral-700">
-                      Price Range
-                    </label>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm text-neutral-600">
-                        <span>{formatPrice(priceRange[0])}</span>
-                        <span>-</span>
-                        <span>{formatPrice(priceRange[1])}</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0"
-                        max="50000"
-                        step="500"
-                        value={priceRange[1]}
-                        onChange={(e) => setPriceRange([priceRange, parseInt(e.target.value)])}
-                        className="w-full h-2 bg-neutral-200 rounded-lg appearance-none cursor-pointer slider"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Rating Filter */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-neutral-700">
-                      Minimum Rating
-                    </label>
-                    <div className="flex gap-1">
-                      {[1, 2, 3, 4, 5].map(rating => (
-                        <button
-                          key={rating}
-                          onClick={() => setSelectedRating(selectedRating === rating ? 0 : rating)}
-                          className={`text-lg transition-colors ${
-                            rating <= selectedRating ? 'text-yellow-400' : 'text-neutral-300 hover:text-yellow-300'
-                          }`}
-                        >
-                          ⭐
-                        </button>
-                      ))}
-                    </div>
-                    <span className="text-xs text-neutral-500">
-                      {selectedRating > 0 ? `${selectedRating}+ stars` : 'All ratings'}
-                    </span>
-                  </div>
-
-                  {/* Additional Filters */}
-                  <div className="space-y-3">
-                    <label className="block text-sm font-medium text-neutral-700">
-                      Additional Filters
-                    </label>
-                    <div className="space-y-2">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={inStockOnly}
-                          onChange={(e) => setInStockOnly(e.target.checked)}
-                          className="w-4 h-4 text-primary-600 border-neutral-300 rounded focus:ring-primary-500"
-                        />
-                        <span className="text-sm text-neutral-700">In stock only</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={featuredOnly}
-                          onChange={(e) => setFeaturedOnly(e.target.checked)}
-                          className="w-4 h-4 text-primary-600 border-neutral-300 rounded focus:ring-primary-500"
-                        />
-                        <span className="text-sm text-neutral-700">Featured products only</span>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Sort Options (Mobile) */}
-                <div className="sm:hidden space-y-2">
-                  <label className="block text-sm font-medium text-neutral-700">
-                    Sort By
-                  </label>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-300 focus:border-primary-500 outline-none bg-white"
-                  >
-                    {sortOptions.map(option => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Active Filters Display */}
-                {hasActiveFilters && (
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    <span className="text-sm text-neutral-600">Active filters:</span>
-                    {searchTerm && (
-                      <span className="bg-primary-100 text-primary-800 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                        Search: "{searchTerm}"
-                        <button onClick={() => setSearchTerm('')} className="hover:text-primary-900 ml-1">×</button>
-                      </span>
-                    )}
-                    {selectedCategory !== 'All' && (
-                      <span className="bg-primary-100 text-primary-800 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                        {selectedCategory}
-                        <button onClick={() => setSelectedCategory('All')} className="hover:text-primary-900 ml-1">×</button>
-                      </span>
-                    )}
-                    {(priceRange[0] !== 0 || priceRange[1] !== 50000) && (
-                      <span className="bg-primary-100 text-primary-800 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                        {formatPrice(priceRange)} - {formatPrice(priceRange[1])}
-                        <button onClick={() => setPriceRange([0, 50000])} className="hover:text-primary-900 ml-1">×</button>
-                      </span>
-                    )}
-                    {selectedRating > 0 && (
-                      <span className="bg-primary-100 text-primary-800 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                        {selectedRating}+ stars
-                        <button onClick={() => setSelectedRating(0)} className="hover:text-primary-900 ml-1">×</button>
-                      </span>
-                    )}
-                    {inStockOnly && (
-                      <span className="bg-primary-100 text-primary-800 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                        In stock only
-                        <button onClick={() => setInStockOnly(false)} className="hover:text-primary-900 ml-1">×</button>
-                      </span>
-                    )}
-                    {featuredOnly && (
-                      <span className="bg-primary-100 text-primary-800 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                        Featured only
-                        <button onClick={() => setFeaturedOnly(false)} className="hover:text-primary-900 ml-1">×</button>
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-            </motion.div>
+        {/* Filter Toggle */}
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="flex items-center gap-2 px-4 py-2 bg-primary-100 text-primary-700 rounded-lg hover:bg-primary-200 transition-colors"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
+          </svg>
+          Filters
+          {hasActiveFilters && (
+            <span className="bg-primary-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+              !
+            </span>
           )}
-        </AnimatePresence>
+        </button>
       </div>
+
+      {/* Advanced Filters */}
+      <AnimatePresence>
+        {showFilters && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="border-t pt-6 space-y-6"
+          >
+            {/* Category and Quick Filters Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Category Filter - NOW DYNAMIC */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Category ({categories.length - 1} available)
+                </label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => {
+                    console.log('Category changed to:', e.target.value) // Debug log
+                    setSelectedCategory(e.target.value)
+                  }}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                >
+                  {categories.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Rating Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Minimum Rating
+                </label>
+                <select
+                  value={selectedRating}
+                  onChange={(e) => setSelectedRating(Number(e.target.value))}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                >
+                  <option value={0}>Any Rating</option>
+                  <option value={4}>4+ Stars</option>
+                  <option value={4.5}>4.5+ Stars</option>
+                </select>
+              </div>
+
+              {/* Quick Filters */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Quick Filters
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={inStockOnly}
+                    onChange={(e) => setInStockOnly(e.target.checked)}
+                    className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">In Stock Only</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={featuredOnly}
+                    onChange={(e) => setFeaturedOnly(e.target.checked)}
+                    className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Featured Only</span>
+                </label>
+              </div>
+
+              {/* CHANGED: Price Range - Updated max to 5000 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Max Price: {formatPrice(priceRange[1])}
+                </label>
+                <div className="space-y-2">
+                  <input
+                    type="range"
+                    min="0"
+                    max="5000" // CHANGED: Maximum value set to 5000
+                    step="50" // CHANGED: Step size to 50 for smoother control
+                    value={priceRange[1]}
+                    onChange={(e) => setPriceRange([0, Number(e.target.value)])}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>₹0</span>
+                    <span>₹5,000</span> {/* CHANGED: Display max as 5,000 */}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Clear Filters */}
+            {hasActiveFilters && (
+              <div className="pt-4 border-t">
+                <button
+                  onClick={clearAllFilters}
+                  className="text-sm text-gray-600 hover:text-gray-800 underline"
+                >
+                  Clear all filters
+                </button>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

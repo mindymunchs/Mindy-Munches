@@ -883,9 +883,9 @@ const ProductDetail = () => {
                           {product.nutritionalInfo.fiber && (
                             <div>Fiber: {product.nutritionalInfo.fiber}g</div>
                           )}
-                          {product.nutritionalInfo.sugar && (
+                          {/* {product.nutritionalInfo.sugar && (
                             <div>Sugar: {product.nutritionalInfo.sugar}g</div>
-                          )}
+                          )} */}
                         </div>
                       </div>
                     ) : (
