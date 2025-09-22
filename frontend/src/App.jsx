@@ -37,6 +37,7 @@ import TermsAndConditions from "./pages/TermsAndConditions";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import RefundPolicy from "./pages/RefundPolicy";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import ContactUs from "./pages/ContactUs";
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -293,6 +294,20 @@ function App() {
                   transition={pageTransition}
                 >
                   <Story />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/contact"
+              element={
+                <motion.div
+                  initial="initial"
+                  animate="in"
+                  exit="out"
+                  variants={pageVariants}
+                  transition={pageTransition}
+                >
+                  <ContactUs/>
                 </motion.div>
               }
             />

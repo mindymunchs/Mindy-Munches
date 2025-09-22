@@ -106,7 +106,7 @@ const timeline = [
           </div>
           <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-center">
             <h4 className="font-bold text-orange-700 text-sm mb-1">Sattu</h4>
-            <p className="text-orange-600 text-xs">Filling • Cooling • Nourishing</p>
+            <p className="text-orange-600 text-xs">Filling • Hydrating • Nourishing</p>
           </div>
         </div>
       </div>
@@ -296,7 +296,8 @@ const Story = () => {
           {/* Mantra Card */}
           <div className="bg-gradient-to-r from-accent-600 to-orange-600 text-white rounded-2xl p-6 md:p-8 shadow-lg">
             <p className="text-lg md:text-xl font-bold">
-              Our Mantra: Revive wholesome foods for modern living.
+              Our Mantra: Reviving Wholesome Trafitional foods for Modern Convenience 
+
             </p>
           </div>
 
