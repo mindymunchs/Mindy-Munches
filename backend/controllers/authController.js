@@ -6,6 +6,7 @@ const emailService = require("../services/emailService");
 const crypto = require("crypto");
 const Guest = require("../models/Guest");
 const { OAuth2Client } = require('google-auth-library'); // Add this import
+const axios = require('axios'); // Add this import for access token verification
 
 // Initialize Google OAuth client
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -237,13 +238,31 @@ const verifyGoogleToken = async (req, res) => {
       });
     }
 
-    // Verify the Google token
-    const ticket = await googleClient.verifyIdToken({
-      idToken: credential,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
+    let payload;
 
-    const payload = ticket.getPayload();
+    // Check if credential is an ID token or access token
+    if (credential.includes('.')) {
+      // ID Token - use existing verification method
+      const ticket = await googleClient.verifyIdToken({
+        idToken: credential,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      payload = ticket.getPayload();
+    } else {
+      // Access Token - verify using Google's API
+      try {
+        const response = await axios.get(`https://www.googleapis.com/oauth2/v1/userinfo?access_token=${credential}`);
+        payload = {
+          sub: response.data.id,
+          email: response.data.email,
+          name: response.data.name,
+          picture: response.data.picture
+        };
+      } catch (error) {
+        throw new Error('Invalid access token');
+      }
+    }
+
     const { sub: googleId, email, name, picture } = payload;
 
     console.log('Google token verified for:', email);
@@ -325,6 +344,113 @@ const verifyGoogleToken = async (req, res) => {
       success: false,
       message: 'Google authentication failed',
       error: error.message,
+    });
+  }
+};
+
+// NEW: Verify Google Access Token specifically (for GoogleButton component)
+const verifyGoogleAccessToken = async (req, res) => {
+  try {
+    const { googleUser, accessToken } = req.body;
+    
+    if (!googleUser || !accessToken) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing Google user data or access token'
+      });
+    }
+
+    // Verify the access token is valid by making a request to Google
+    try {
+      const verifyResponse = await axios.get(`https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${accessToken}`);
+      if (!verifyResponse.data || !verifyResponse.data.audience) {
+        throw new Error('Invalid access token');
+      }
+    } catch (error) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid Google access token'
+      });
+    }
+
+    const { email, name, picture, sub: googleId } = googleUser;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required from Google account'
+      });
+    }
+
+    console.log('Google access token verified for:', email);
+
+    // Check if user exists
+    let user = await User.findOne({ email });
+
+    if (user) {
+      // Update Google ID if not present
+      if (!user.googleId) {
+        user.googleId = googleId;
+        user.authProvider = 'google';
+        user.profilePicture = picture;
+      }
+      user.lastLogin = new Date();
+      await user.save();
+    } else {
+      // Create new user
+      user = new User({
+        name: name || 'Google User',
+        email,
+        googleId,
+        profilePicture: picture,
+        authProvider: 'google',
+        isEmailVerified: true,
+        lastLogin: new Date()
+      });
+      await user.save();
+
+      // Auto-subscribe to newsletter
+      try {
+        const existingGuest = await Guest.findOne({ email });
+        if (!existingGuest) {
+          const guest = new Guest({
+            email,
+            name: name || 'Google User',
+            newsletterSubscribed: true,
+          });
+          await guest.save();
+        }
+
+        await emailService.sendWelcomeEmail(email, name || 'Google User');
+        console.log(`✅ New Google user auto-subscribed: ${email}`);
+      } catch (emailError) {
+        console.error("Google user newsletter subscription error:", emailError);
+      }
+    }
+
+    // Generate JWT token
+    const token = generateToken(user._id);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        token,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          profilePicture: user.profilePicture
+        }
+      },
+      message: 'Google authentication successful'
+    });
+
+  } catch (error) {
+    console.error('Google access token verification error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Google authentication failed'
     });
   }
 };
@@ -633,5 +759,6 @@ module.exports = {
   googleCallback,
   googleSuccess,
   verifyGoogleToken,
+  verifyGoogleAccessToken, // NEW method for GoogleButton
   refreshToken,
 };

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import useAuthStore from "../store/authStore";
+import GoogleButton from "../components/GoogleButton";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -93,34 +94,43 @@ const Auth = () => {
   };
 
   // ======= GOOGLE OAUTH HANDLERS =======
+  // ======= UPDATED GOOGLE OAUTH HANDLER =======
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
       setIsLoading(true);
       setErrors({});
 
-      console.log("Google OAuth success:", credentialResponse);
+      console.log("🚀 Google OAuth success:", credentialResponse);
 
       const apiUrl = import.meta.env.VITE_API_URL;
+      console.log("🌐 API URL:", apiUrl);
 
-      // Send Google token to backend for verification
-      const response = await fetch(`${apiUrl}/auth/google/verify`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          credential: credentialResponse.credential,
-        }),
-      });
+      // Use the new endpoint for access token verification
+      const response = await fetch(
+        `${apiUrl}/auth/verify-google-access-token`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            googleUser: credentialResponse.userData,
+            accessToken: credentialResponse.credential,
+          }),
+        }
+      );
 
+      console.log("📡 Response status:", response.status);
       const data = await response.json();
-      console.log("Google auth response:", data);
+      console.log("📥 Google auth response:", data);
 
       if (!response.ok) {
-        throw new Error(data.message || "Google authentication failed");
+        throw new Error(
+          data.message || `HTTP ${response.status}: ${response.statusText}`
+        );
       }
 
-      if (data.success && data.data.token) {
+      if (data.success && data.data && data.data.token) {
         // Store token in localStorage
         localStorage.setItem("token", data.data.token);
 
@@ -132,8 +142,8 @@ const Auth = () => {
 
         // Determine redirect URL based on user role
         const redirectUrl = getRedirectUrl(data.data.user, from);
-        console.log("Google user role:", data.data.user.role);
-        console.log("Redirecting to:", redirectUrl);
+        console.log("👤 Google user role:", data.data.user.role);
+        console.log("🔄 Redirecting to:", redirectUrl);
 
         // Navigate to appropriate page
         navigate(redirectUrl, { replace: true });
@@ -158,10 +168,10 @@ const Auth = () => {
           }, 4000);
         }, 100);
       } else {
-        throw new Error("Invalid response format");
+        throw new Error("Invalid response format from server");
       }
     } catch (error) {
-      console.error("Google OAuth error:", error);
+      console.error("❌ Google OAuth error:", error);
       setErrors({
         general:
           error.message || "Google authentication failed. Please try again.",
@@ -383,28 +393,14 @@ const Auth = () => {
           </div>
         )}
 
-        {/* Google OAuth Button */}
+        {/* Custom Google OAuth Button */}
         <div className="mb-6">
-          <div className="google-button-wrapper">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={handleGoogleError}
-              size="large"
-              width="100%"
-              text={isLogin ? "signin_with" : "signup_with"}
-              shape="rectangular"
-              theme="outline"
-              locale="en"
-              disabled={isLoading}
-              useOneTap={false}
-              cancel_on_tap_outside={true}
-              style={{
-                width: "100%",
-                height: "48px",
-                borderRadius: "8px",
-              }}
-            />
-          </div>
+          <GoogleButton
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleError}
+            disabled={isLoading}
+            isLogin={isLogin}
+          />
         </div>
 
         {/* Divider */}

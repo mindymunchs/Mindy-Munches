@@ -86,6 +86,10 @@ router.post('/change-password', authenticate, changePasswordValidation, authCont
 router.post('/forgot-password', authController.forgotPassword);
 router.post('/reset-password', authController.resetPassword);
 router.post('/demo-login', authController.demoLogin);
+router.post('/verify-google-token', authController.verifyGoogleToken);
+// In your routes/auth.js file
+router.post('/verify-google-access-token', authController.verifyGoogleAccessToken);
+
 
 // ======= GOOGLE OAUTH ROUTES =======
 
