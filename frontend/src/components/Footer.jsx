@@ -301,19 +301,16 @@ const Footer = () => {
               className="font-semibold text-sm sm:text-base"
               style={{ color: "#1C1E19" }}
             >
-              Ghaziabad, Uttar Pradesh
-            </p>
-            <p className="text-sm sm:text-base" style={{ color: "#1C1E19" }}>
-              India
+               For Buld Order Write Us At
             </p>
             <div className="text-sm sm:text-base" style={{ color: "#1C1E19" }}>
-              <span className="font-medium">Email ID: </span>
+              <span className="font-medium"></span>
               <a
-                href="mailto:connect @mindymunchs.com"
+                href="mailto:wecare@mindymunchs.com"
                 className="underline hover:text-primary-600 transition-colors duration-200 break-all"
                 style={{ color: "#1C1E19" }}
               >
-                connect @mindymunchs.com
+                wecare@mindymunchs.com
               </a>
             </div>
 

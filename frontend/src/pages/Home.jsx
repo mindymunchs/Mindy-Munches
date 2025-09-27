@@ -550,7 +550,7 @@ const Home = () => {
                 Snacking shouldn’t come with guilt. That’s why at Mindy Munchs,
                 we craft bites that are as quick to reach for as your go-to
                 packet — only smarter, tastier, and way better for you. Health
-                should feel personal , playful and rooted in our everyday lives
+                should feel personal, playful and rooted in our everyday lives.
               </p>
               <br></br>
               {/* Certifications: single line, no wrap, no x-scroll */}

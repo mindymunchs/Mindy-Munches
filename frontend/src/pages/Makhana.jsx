@@ -39,9 +39,11 @@ const Makhana = () => {
               super easy to enjoy — ready in just minutes.
             </p>
 
-            <button className="btn-accent text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold hover:scale-105 transform transition-all duration-300 shadow-lg">
-              Shop Now
-            </button>
+            <Link to="/products">
+              <button className="btn-accent text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold hover:scale-105 transform transition-all duration-300 shadow-lg">
+                Shop Now
+              </button>
+            </Link>
           </div>
         </div>
       </div>
@@ -137,7 +139,7 @@ const Makhana = () => {
                 <div className="bg-gradient-to-br from-neutral-100 to-neutral-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl">
                   <div className="aspect-[4/5] overflow-hidden rounded-lg">
                     <img
-                      src="/makhana-static.jpg"
+                      src="/Asset51@4x.png"
                       alt="Makhana health benefits"
                       className="w-full h-full object-cover"
                     />
@@ -329,7 +331,7 @@ const Makhana = () => {
               <div className="w-full max-w-xs sm:max-w-sm lg:max-w-md">
                 <div className="bg-gradient-to-br from-neutral-100 to-neutral-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 shadow-xl">
                   <img
-                    src="/makhana3-static.jpg"
+                    src="/Makhana_2.png"
                     alt="Makhana nutrition facts"
                     className="w-full h-auto rounded-lg"
                   />

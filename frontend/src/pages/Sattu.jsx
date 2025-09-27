@@ -12,7 +12,7 @@ const Sattu = () => {
             <div className="bg-gradient-to-br from-orange-200 to-yellow-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl w-full">
               <div className="aspect-[4/5] overflow-hidden rounded-lg">
                 <img
-                  src="/sattu-static.jpg"
+                  src="/Sattu1.png"
                   alt="Sattu Product"
                   className="w-full h-full object-cover object-center"
                 />
@@ -40,9 +40,11 @@ const Sattu = () => {
               energy, gut health, and everyday wellness.
             </p>
 
-            <button className="btn-accent text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold hover:scale-105 transform transition-all duration-300 shadow-lg">
-              Buy Now
-            </button>
+            <Link to="/products">
+              <button className="btn-accent text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold hover:scale-105 transform transition-all duration-300 shadow-lg">
+                Buy Now
+              </button>
+            </Link>
           </div>
         </div>
       </div>
@@ -116,7 +118,7 @@ const Sattu = () => {
                 <div className="bg-gradient-to-br from-neutral-100 to-neutral-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl">
                   <div className="aspect-[4/5] overflow-hidden rounded-lg">
                     <img
-                      src="/sattu1-static.jpg"
+                      src="/sattu-static.jpg"
                       alt="Premium Sattu preparation"
                       className="w-full h-full object-cover"
                     />
@@ -227,7 +229,7 @@ const Sattu = () => {
                         Masala Sattu
                       </h3>
                       <p className="text-xs sm:text-sm text-gray-200 opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 delay-100">
-                        Spicy but balanced 
+                        Spicy but balanced
                       </p>
                     </div>
                   </div>
@@ -263,7 +265,7 @@ const Sattu = () => {
                   <h3 className="font-heading text-base sm:text-lg font-bold text-accent-600 group-hover:text-orange-400 transition mb-1">
                     Muscle Support -{" "}
                     <span className="text-neutral-500 text-xs sm:text-sm ml-2 sm:ml-3 font-normal">
-                      High protein strengthens the muscle 
+                      High protein strengthens the muscle
                     </span>
                   </h3>
                 </div>
@@ -310,7 +312,7 @@ const Sattu = () => {
               <div className="w-full max-w-xs sm:max-w-sm lg:max-w-md">
                 <div className="bg-gradient-to-br from-neutral-100 to-neutral-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 shadow-xl">
                   <img
-                    src="/sattu2-static.jpg"
+                    src="/sattu3.jpg"
                     alt="Sattu energy benefits"
                     className="w-full h-auto rounded-lg"
                   />
@@ -330,7 +332,7 @@ const Sattu = () => {
               <div className="w-full max-w-xs sm:max-w-sm lg:max-w-md">
                 <div className="bg-gradient-to-br from-orange-200 to-yellow-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 shadow-xl">
                   <img
-                    src="/sattu3-static.jpg"
+                    src="/sattu4.png"
                     alt="Plant protein benefits"
                     className="w-full h-9/10 rounded-lg"
                   />

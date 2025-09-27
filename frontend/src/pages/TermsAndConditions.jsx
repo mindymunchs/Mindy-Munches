@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 const TermsAndConditions = () => {
   return (
@@ -122,7 +123,10 @@ const TermsAndConditions = () => {
               <li className="flex items-start">
                 <span className="text-accent-600 mr-3 mt-1">•</span>
                 All content, packaging, and branding are owned by{" "}
-                <span className="font-brand font-semibold">&nbsp;Mindy Munchs</span>.
+                <span className="font-brand font-semibold">
+                  &nbsp;Mindy Munchs
+                </span>
+                .
               </li>
               <li className="flex items-start">
                 <span className="text-accent-600 mr-3 mt-1">•</span>
@@ -172,9 +176,11 @@ const TermsAndConditions = () => {
           <p className="text-white text-lg font-accent mb-6">
             Have questions about our terms? We're here to help!
           </p>
-          <button className="btn-primary bg-white text-primary-700 hover:bg-neutral-100 font-heading">
-            Contact Support
-          </button>
+          <Link to="/contact">
+            <button className="btn-primary bg-white text-primary-700 hover:bg-neutral-100 font-heading">
+              Contact Support
+            </button>
+          </Link>
         </div>
       </div>
     </div>

@@ -5,6 +5,11 @@ import { useState, useEffect, useRef } from "react";
 import useAuthStore from "../store/authStore";
 import useCartStore from "../store/cartStore";
 import CartDropdown from "./CartDropdown";
+import { 
+  ArrowRightEndOnRectangleIcon, 
+  UserCircleIcon, 
+  ShoppingCartIcon 
+} from '@heroicons/react/24/outline';
 
 const Navbar = () => {
   const location = useLocation();
@@ -34,21 +39,6 @@ const Navbar = () => {
 
   const isActive = (path) =>
     location.pathname === path || location.pathname.startsWith(path);
-
-  // Always go Home, then scroll to #our-story
-  const handleGoToOurStory = (e) => {
-    e.preventDefault();
-    setShowMobileMenu(false);
-    navigate("/", { replace: false });
-    setTimeout(() => {
-      const el = document.getElementById("our-story");
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-      } else {
-        window.location.hash = "#our-story";
-      }
-    }, 50);
-  };
 
   // Close mobile menu when clicking outside
   useEffect(() => {
@@ -111,13 +101,14 @@ const Navbar = () => {
               Products
             </Link>
 
-            <button
-              onClick={handleGoToOurStory}
-              className="text-base md:text-[17px] font-semibold transition-colors hover:text-primary-500 text-neutral-700"
-              type="button"
+            <Link
+              to="/story"
+              className={`text-base md:text-[17px] font-semibold transition-colors hover:text-primary-500 ${
+                isActive("/products") ? "text-primary-500" : "text-neutral-700"
+              }`}
             >
               Our Story
-            </button>
+            </Link>
 
             {/* Admin Link - Only show if user is authenticated AND admin */}
             <AnimatePresence>
@@ -162,7 +153,7 @@ const Navbar = () => {
 
           {/* Right Section - Desktop */}
           <div className="hidden md:flex items-center space-x-4">
-            {/* Cart Button - Updated: Always accessible, no auth required */}
+            {/* Cart Button - Updated: Clean icon without text */}
             <div
               className="relative"
               onMouseEnter={() => setShowCartDropdown(true)}
@@ -170,30 +161,18 @@ const Navbar = () => {
             >
               <Link
                 to="/cart"
-                className={`relative text-base md:text-[17px] font-semibold transition-colors hover:text-primary-500 flex items-center gap-1 ${
-                  isActive("/cart") ? "text-primary-500" : "text-neutral-700"
+                className={`relative text-neutral-700 hover:text-primary-500 transition-colors p-2 rounded-lg hover:bg-neutral-50 flex items-center justify-center ${
+                  isActive("/cart") ? "text-primary-500 bg-primary-50" : ""
                 }`}
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M3 3h2l.4 2M7 13h10l4-8H5.4m1.6 8L3 3H1m6 10v6a2 2 0 002 2h8a2 2 0 002-2v-6m-10 0V9a2 2 0 012-2h4a2 2 0 012 2v4.1"
-                  />
-                </svg>
-                <span className="hidden lg:inline">Cart</span>
+                <ShoppingCartIcon className="w-6 h-6" />
+                <span className="sr-only">Shopping Cart</span>
                 {cartCount > 0 && (
                   <motion.span
                     key={cartCount}
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="absolute -top-2 -right-2 bg-primary-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium min-w-[20px]"
+                    className="absolute -top-1 -right-1 bg-primary-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium min-w-[20px]"
                   >
                     {cartCount > 99 ? "99+" : cartCount}
                   </motion.span>
@@ -206,12 +185,12 @@ const Navbar = () => {
               />
             </div>
 
-            {/* User Dashboard Link - Updated: Shows first name only */}
+            {/* User Dashboard & Logout - Updated: No background */}
             {isAuthenticated ? (
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2">
                 <Link
                   to="/dashboard"
-                  className="flex items-center gap-2 text-neutral-700 hover:text-primary-500 transition-colors"
+                  className="flex items-center gap-2 text-neutral-700 hover:text-primary-500 transition-colors p-2 rounded-lg hover:bg-neutral-50"
                 >
                   <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
                     {user?.name?.charAt(0)?.toUpperCase() || "U"}
@@ -225,18 +204,21 @@ const Navbar = () => {
                     </span>
                   )}
                 </Link>
-                <Link to="/">
-                  <button
-                    onClick={handleLogout}
-                    className="text-base md:text-[17px] font-semibold text-neutral-700 hover:text-primary-500 transition-colors"
-                  >
-                    Logout
-                  </button>
-                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center justify-center text-neutral-700 hover:text-red-500 transition-colors p-2"
+                >
+                  <ArrowRightEndOnRectangleIcon className="w-7 h-7" />
+                  <span className="sr-only">Logout</span>
+                </button>
               </div>
             ) : (
-              <Link to="/auth" className="btn-primary text-sm">
-                Login
+              <Link
+                to="/auth"
+                className="flex items-center justify-center text-neutral-700 hover:text-primary-500 transition-colors p-2"
+              >
+                <UserCircleIcon className="w-7 h-7" />
+                <span className="sr-only">Login</span>
               </Link>
             )}
           </div>
@@ -410,9 +392,14 @@ const Navbar = () => {
                     <span className="font-semibold">Products</span>
                   </Link>
 
-                  <button
-                    onClick={handleGoToOurStory}
-                    className="flex items-center gap-3 p-3 rounded-lg transition-colors text-neutral-700 hover:bg-neutral-50 w-full text-left"
+                  <Link
+                    to="/story"
+                    onClick={() => setShowMobileMenu(false)}
+                    className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                      isActive("/products")
+                        ? "bg-primary-50 text-primary-600"
+                        : "text-neutral-700 hover:bg-neutral-50"
+                    }`}
                   >
                     <svg
                       className="w-5 h-5"
@@ -428,7 +415,7 @@ const Navbar = () => {
                       />
                     </svg>
                     <span className="font-semibold">Our Story</span>
-                  </button>
+                  </Link>
 
                   {/* Cart - Always visible in mobile menu */}
                   <div className="border-t border-neutral-100 my-4"></div>
@@ -443,19 +430,7 @@ const Navbar = () => {
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M3 3h2l.4 2M7 13h10l4-8H5.4m1.6 8L3 3H1m6 10v6a2 2 0 002 2h8a2 2 0 002-2v-6m-10 0V9a2 2 0 012-2h4a2 2 0 012 2v4.1"
-                        />
-                      </svg>
+                      <ShoppingCartIcon className="w-5 h-5" />
                       <span className="font-semibold">Cart</span>
                     </div>
                     {cartCount > 0 && (
@@ -536,46 +511,22 @@ const Navbar = () => {
                         onClick={handleLogout}
                         className="flex items-center gap-3 p-3 rounded-lg transition-colors text-red-600 hover:bg-red-50 w-full text-left"
                       >
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                          />
-                        </svg>
+                        <ArrowRightEndOnRectangleIcon className="w-5 h-5" />
                         <span className="font-semibold">Logout</span>
                       </button>
                     </>
                   )}
 
-                  {/* Login for non-authenticated users */}
+                  {/* Login for non-authenticated users - Updated: No background */}
                   {!isAuthenticated && (
                     <>
                       <div className="border-t border-neutral-100 my-4"></div>
                       <Link
                         to="/auth"
                         onClick={() => setShowMobileMenu(false)}
-                        className="flex items-center gap-3 p-3 rounded-lg transition-colors bg-primary-500 text-white hover:bg-primary-600"
+                        className="flex items-center gap-3 p-3 rounded-lg transition-colors text-neutral-700 hover:text-primary-500"
                       >
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                          />
-                        </svg>
+                        <UserCircleIcon className="w-5 h-5" />
                         <span className="font-semibold">Login / Sign Up</span>
                       </Link>
                     </>
