@@ -637,7 +637,7 @@ const Home = () => {
                 className="w-full h-full"
               >
                 <img
-                  src="/Asset19.png"
+                  src="/Home2.png"
                   alt="Creative brand mock"
                   className="w-full h-9/10 object-cover md:object-contain rounded-2xl md:rounded-3xl"
                   loading="lazy"

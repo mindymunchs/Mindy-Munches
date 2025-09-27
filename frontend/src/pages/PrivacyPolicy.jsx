@@ -145,8 +145,8 @@ const PrivacyPolicy = () => {
               </p>
               <div className="bg-neutral-50 p-4 rounded-lg">
                 <p className="mb-2"><span className="font-semibold">Email:</span> wecare@mindymunchs.com</p>
-                <p className="mb-2"><span className="font-semibold">Phone:</span> +91-XXXX-XXXXXX</p>
-                <p><span className="font-semibold">Address:</span> [Your Business Address]</p>
+                <p className="mb-2"><span className="font-semibold">Phone:</span> +91-9355926060</p>
+                <p><span className="font-semibold">Address:</span> Ghaziabad, Uttar Pradesh</p>
               </div>
             </div>
           </div>
