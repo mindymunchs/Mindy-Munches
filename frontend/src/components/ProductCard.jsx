@@ -273,16 +273,54 @@ const ProductCard = ({
           >
             {product.name}
           </motion.h3>
-          {/* Price Display - optimized */}
-          <motion.span
-            className="font-semibold text-primary-600 text-base leading-tight whitespace-nowrap"
-            key={product.id || product._id} // Use product ID for unique key
-            initial={{ opacity: 0, x: 10, scale: 0.8 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-          >
-            {formatPrice(product.price)}
-          </motion.span>
+          <div className="flex items-center gap-2 mb-3">
+            {product.originalPrice && product.originalPrice > product.price ? (
+              <>
+                {/* Discounted Price */}
+                <motion.span
+                  className="font-semibold text-primary-600 text-base leading-tight whitespace-nowrap"
+                  key={`${product.id || product._id}-discounted`}
+                  initial={{ opacity: 0, x: 10, scale: 0.8 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+                >
+                  {formatPrice(product.price)}
+                </motion.span>
+
+                {/* Original Price (crossed out) */}
+                <motion.span
+                  className="text-sm text-gray-500 line-through font-medium"
+                  key={`${product.id || product._id}-original`}
+                  initial={{ opacity: 0, x: 5 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: 0.1 }}
+                >
+                  {formatPrice(product.originalPrice)}
+                </motion.span>
+
+                {/* Discount Percentage */}
+                <motion.span
+                  className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-medium"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, delay: 0.2 }}
+                >
+                  -{product.discountPercentage}% OFF
+                </motion.span>
+              </>
+            ) : (
+              /* Regular Price (no discount) */
+              <motion.span
+                className="font-semibold text-primary-600 text-base leading-tight whitespace-nowrap"
+                key={product.id || product._id}
+                initial={{ opacity: 0, x: 10, scale: 0.8 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+              >
+                {formatPrice(product.price)}
+              </motion.span>
+            )}
+          </div>
         </div>
 
         {/* Rating and Reviews */}

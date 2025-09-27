@@ -312,7 +312,7 @@ const Sattu = () => {
               <div className="w-full max-w-xs sm:max-w-sm lg:max-w-md">
                 <div className="bg-gradient-to-br from-neutral-100 to-neutral-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 shadow-xl">
                   <img
-                    src="/sattu3.jpg"
+                    src="/Sattu3.jpg"
                     alt="Sattu energy benefits"
                     className="w-full h-auto rounded-lg"
                   />

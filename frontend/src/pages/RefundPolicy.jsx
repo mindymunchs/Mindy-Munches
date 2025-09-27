@@ -106,7 +106,7 @@ const RefundPolicy = () => {
                     Reach out within{" "}
                     <span className="font-semibold">3 days of delivery</span> at{" "}
                     <span className="font-semibold text-secondary-700">
-                      support@mindymunchs.com
+                      wecare@mindymunchs.com
                     </span>
                   </p>
                 </div>
@@ -143,7 +143,7 @@ const RefundPolicy = () => {
                     Once approved,{" "}
                     <span className="font-semibold">refund/replacement</span>{" "}
                     will be processed within{" "}
-                    <span className="font-semibold">7–10 business days</span>
+                    <span className="font-semibold">24 Hours</span>
                   </p>
                 </div>
               </div>

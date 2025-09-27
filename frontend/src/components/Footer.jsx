@@ -293,7 +293,7 @@ const Footer = () => {
               className="font-semibold text-sm sm:text-base"
               style={{ color: "#1C1E19" }}
             >
-               For Buld Order Write Us At
+               For Bulk Order Write Us At
             </p>
             <div className="text-sm sm:text-base" style={{ color: "#1C1E19" }}>
               <span className="font-medium"></span>
