@@ -355,11 +355,7 @@ const ProductCard = ({
                 ⭐
               </motion.span>
             ))}
-          </div>
-          <span className="text-sm font-medium text-gray-700">4.91</span>
-          <span className="text-xs text-gray-500">
-            {bestseller?.sales || "2k+ Reviews"}
-          </span>
+          </div>          
         </motion.div>
 
         {/* Stock Status */}
