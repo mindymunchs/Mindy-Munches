@@ -524,6 +524,132 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Bestsellers Section with Horizontal Scroll */}
+      <section className="py-16 md:py-20 bg-neutral-50 overflow-hidden">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            className="text-center mb-12"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-heading font-bold text-primary-500 mb-4">
+              Our Bestsellers
+            </h2>
+            <p className="text-base md:text-lg text-neutral-600 max-w-2xl mx-auto">
+              Discover why thousands of customers choose these traditional
+              superfoods for their daily nutrition.
+            </p>
+          </motion.div>
+
+          {loading ? (
+            <Loader text="Loading bestsellers..." />
+          ) : (
+            <div className="relative">
+              {/* Horizontal Scrollable Container - 4 Cards Fully Visible */}
+              <div
+                id="bestseller-scroll"
+                className="flex gap-6 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory"
+                style={{
+                  WebkitOverflowScrolling: "touch",
+                  scrollPaddingLeft: "1.5rem",
+                  scrollPaddingRight: "1.5rem",
+                }}
+              >
+                {bestsellers.map((product, index) => (
+                  <div
+                    key={product.id}
+                    className="flex-shrink-0 snap-start"
+                    style={{
+                      width: "calc(25% - 18px)", // 25% width minus gap (24px total gap / 4 * 3)
+                      minWidth: "280px", // Minimum width for mobile
+                    }}
+                  >
+                    <ProductCard
+                      product={product}
+                      index={index}
+                      showBestsellerBadge={true}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Navigation Arrows */}
+              <button
+                className="absolute top-1/2 -left-4 z-30 -translate-y-1/2 bg-white rounded-full shadow-lg p-3 hover:bg-gray-100 transition-colors duration-200"
+                aria-label="Scroll Left"
+                onClick={() => {
+                  const container =
+                    document.getElementById("bestseller-scroll");
+                  const cardWidth = container.scrollWidth / bestsellers.length;
+                  const scrollAmount = cardWidth * 1; // Scroll by exactly 1 card width
+                  container.scrollBy({
+                    left: -scrollAmount,
+                    behavior: "smooth",
+                  });
+                }}
+              >
+                <svg
+                  className="w-5 h-5 text-gray-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </button>
+
+              <button
+                className="absolute top-1/2 -right-4 z-30 -translate-y-1/2 bg-white rounded-full shadow-lg p-3 hover:bg-gray-100 transition-colors duration-200"
+                aria-label="Scroll Right"
+                onClick={() => {
+                  const container =
+                    document.getElementById("bestseller-scroll");
+                  const cardWidth = container.scrollWidth / bestsellers.length;
+                  const scrollAmount = cardWidth * 1; // Scroll by exactly 1 card width
+                  container.scrollBy({
+                    left: scrollAmount,
+                    behavior: "smooth",
+                  });
+                }}
+              >
+                <svg
+                  className="w-5 h-5 text-gray-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
+            </div>
+          )}
+
+          <motion.div
+            className="text-center mt-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            viewport={{ once: true }}
+          >
+            <Link to="/products" className="btn-primary">
+              View All Products
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+
       {/* CREATIVE BRAND SECTION - Separate Section with Content */}
       <section className="py-12 md:py-20 bg-gradient-to-br from-orange-50 via-yellow-50 to-orange-100 overflow-x-hidden overflow-y-hidden">
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -691,132 +817,6 @@ const Home = () => {
               ))}
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Bestsellers Section with Horizontal Scroll */}
-      <section className="py-16 md:py-20 bg-neutral-50 overflow-hidden">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            className="text-center mb-12"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-heading font-bold text-primary-500 mb-4">
-              Our Bestsellers
-            </h2>
-            <p className="text-base md:text-lg text-neutral-600 max-w-2xl mx-auto">
-              Discover why thousands of customers choose these traditional
-              superfoods for their daily nutrition.
-            </p>
-          </motion.div>
-
-          {loading ? (
-            <Loader text="Loading bestsellers..." />
-          ) : (
-            <div className="relative">
-              {/* Horizontal Scrollable Container - 4 Cards Fully Visible */}
-              <div
-                id="bestseller-scroll"
-                className="flex gap-6 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory"
-                style={{
-                  WebkitOverflowScrolling: "touch",
-                  scrollPaddingLeft: "1.5rem",
-                  scrollPaddingRight: "1.5rem",
-                }}
-              >
-                {bestsellers.map((product, index) => (
-                  <div
-                    key={product.id}
-                    className="flex-shrink-0 snap-start"
-                    style={{
-                      width: "calc(25% - 18px)", // 25% width minus gap (24px total gap / 4 * 3)
-                      minWidth: "280px", // Minimum width for mobile
-                    }}
-                  >
-                    <ProductCard
-                      product={product}
-                      index={index}
-                      showBestsellerBadge={true}
-                    />
-                  </div>
-                ))}
-              </div>
-
-              {/* Navigation Arrows */}
-              <button
-                className="absolute top-1/2 -left-4 z-30 -translate-y-1/2 bg-white rounded-full shadow-lg p-3 hover:bg-gray-100 transition-colors duration-200"
-                aria-label="Scroll Left"
-                onClick={() => {
-                  const container =
-                    document.getElementById("bestseller-scroll");
-                  const cardWidth = container.scrollWidth / bestsellers.length;
-                  const scrollAmount = cardWidth * 1; // Scroll by exactly 1 card width
-                  container.scrollBy({
-                    left: -scrollAmount,
-                    behavior: "smooth",
-                  });
-                }}
-              >
-                <svg
-                  className="w-5 h-5 text-gray-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-              </button>
-
-              <button
-                className="absolute top-1/2 -right-4 z-30 -translate-y-1/2 bg-white rounded-full shadow-lg p-3 hover:bg-gray-100 transition-colors duration-200"
-                aria-label="Scroll Right"
-                onClick={() => {
-                  const container =
-                    document.getElementById("bestseller-scroll");
-                  const cardWidth = container.scrollWidth / bestsellers.length;
-                  const scrollAmount = cardWidth * 1; // Scroll by exactly 1 card width
-                  container.scrollBy({
-                    left: scrollAmount,
-                    behavior: "smooth",
-                  });
-                }}
-              >
-                <svg
-                  className="w-5 h-5 text-gray-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </button>
-            </div>
-          )}
-
-          <motion.div
-            className="text-center mt-12"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            viewport={{ once: true }}
-          >
-            <Link to="/products" className="btn-primary">
-              View All Products
-            </Link>
-          </motion.div>
         </div>
       </section>
 
