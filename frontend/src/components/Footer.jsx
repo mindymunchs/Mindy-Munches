@@ -217,6 +217,8 @@ const Footer = () => {
                   <a
                     key={social.name}
                     href={social.href}
+                    target={social.target}
+                    rel="noopener noreferrer"
                     className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-200 hover:bg-primary-500 rounded-full flex items-center justify-center hover:text-white hover:scale-110 transition-all duration-200"
                     title={social.name}
                     style={{ color: "#1C1E19" }}
@@ -322,6 +324,9 @@ const Footer = () => {
                 {availablePlatforms.map((platform) => (
                   <div
                     key={platform.name}
+                    href={platform.href}
+                    target={platform.target || "_self"}
+                    rel="noopener noreferrer"
                     className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 hover:bg-primary-500 rounded-full flex items-center justify-center hover:scale-110 transition-all duration-200 p-1"
                     title={`Available on ${platform.name}`}
                   >
