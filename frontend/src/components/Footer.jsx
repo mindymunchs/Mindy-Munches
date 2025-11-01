@@ -320,29 +320,48 @@ const Footer = () => {
               >
                 Available on:
               </span>
+
               <div className="flex gap-3 sm:gap-6">
-                {availablePlatforms.map((platform) => (
-                  <div
-                    key={platform.name}
-                    href={platform.href}
-                    target={platform.target || "_self"}
-                    rel="noopener noreferrer"
-                    className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 hover:bg-primary-500 rounded-full flex items-center justify-center hover:scale-110 transition-all duration-200 p-1"
-                    title={`Available on ${platform.name}`}
-                  >
-                    <img
-                      src={platform.logoSrc}
-                      alt={`${platform.name} logo`}
-                      className="w-full h-full object-contain"
-                      onError={(e) => {
-                        // Fallback to placeholder if image fails to load
-                        e.target.src = `https://via.placeholder.com/32/6b7280/ffffff?text=${platform.name.charAt(
-                          0
-                        )}`;
-                      }}
-                    />
-                  </div>
-                ))}
+                {availablePlatforms.map((platform) =>
+                  platform.href ? (
+                    <a
+                      key={platform.name}
+                      href={platform.href}
+                      target={platform.target || "_blank"} // open in new tab
+                      rel="noopener noreferrer"
+                      className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 hover:bg-primary-500 rounded-full flex items-center justify-center hover:scale-110 transition-all duration-200 p-1"
+                      title={`Available on ${platform.name}`}
+                    >
+                      <img
+                        src={platform.logoSrc}
+                        alt={`${platform.name} logo`}
+                        className="w-full h-full object-contain"
+                        onError={(e) => {
+                          e.target.src = `https://via.placeholder.com/32/6b7280/ffffff?text=${platform.name.charAt(
+                            0
+                          )}`;
+                        }}
+                      />
+                    </a>
+                  ) : (
+                    <div
+                      key={platform.name}
+                      className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 hover:bg-primary-500 rounded-full flex items-center justify-center hover:scale-110 transition-all duration-200 p-1"
+                      title={`Available on ${platform.name}`}
+                    >
+                      <img
+                        src={platform.logoSrc}
+                        alt={`${platform.name} logo`}
+                        className="w-full h-full object-contain"
+                        onError={(e) => {
+                          e.target.src = `https://via.placeholder.com/32/6b7280/ffffff?text=${platform.name.charAt(
+                            0
+                          )}`;
+                        }}
+                      />
+                    </div>
+                  )
+                )}
               </div>
             </div>
           </div>
