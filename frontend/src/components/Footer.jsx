@@ -150,7 +150,8 @@ const Footer = () => {
     },
     {
       name: "Flipkart",
-      logoSrc: "/flipkart-logo.png", // Replace with your actual logo path
+      logoSrc: "/flipkart-logo.png",
+      href: "https://www.flipkart.com/mindy-munchs-masala-sattu-powder-roasted-channa-flour-nutritious-indian-superfood/p/itmca51203e65cbf?pid=FLRHGF7DFVYUMH5B&lid=LSTFLRHGF7DFVYUMH5BHVL586&marketplace=FLIPKART&q=mindy+munchs+sattu&store=eat%2Fe6o&srno=s_1_2&otracker=AS_QueryStore_HistoryAutoSuggest_1_6_na_na_na&otracker1=AS_QueryStore_HistoryAutoSuggest_1_6_na_na_na&fm=search-autosuggest&iid=de0a0604-c5ab-47a2-a63f-a887c47748f0.FLRHGF7DFVYUMH5B.SEARCH&ppt=sp&ppn=sp&ssid=aw6q3iev280000001762241812768&qH=b5110f6268c4cafa" // Replace with your actual logo path
     },
   ];
 

@@ -1,5 +1,5 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 const useCartStore = create(
   persist(
@@ -8,459 +8,527 @@ const useCartStore = create(
       items: [],
       loading: false,
       error: null,
-      isGuest: false, // Track if user is in guest mode
+      isGuest: false,
+
+      // ✅ Helper function to transform backend cart items
+      transformCartItems: (backendItems) => {
+        if (!backendItems || !Array.isArray(backendItems)) return [];
+
+        return backendItems
+          .map((item) => {
+            const product = item.product || item;
+            const productId = product._id || product.id || item._id || item.id;
+
+            // ✅ Handle image being an object, array, or string
+            let imageUrl = "";
+
+            // Get raw image data
+            const rawImage = product.images?.[0] || product.image || item.image;
+
+            // Extract URL based on type
+            if (typeof rawImage === "string") {
+              imageUrl = rawImage;
+            } else if (rawImage && typeof rawImage === "object") {
+              // Handle image object (e.g., {url: "...", publicId: "..."})
+              imageUrl =
+                rawImage.url || rawImage.secure_url || rawImage.link || "";
+            }
+
+            console.log("Image transformation:", {
+              name: product.name,
+              rawImage: rawImage,
+              finalUrl: imageUrl,
+            });
+
+            return {
+              _id: productId,
+              id: productId,
+              name: product.name || item.name,
+              price: item.price || product.price,
+              image: imageUrl,
+              category: product.category || item.category || "",
+              quantity: item.quantity || 1,
+              stock: product.stock || item.stock,
+            };
+          })
+          .filter((item) => item.name && item.price);
+      },
 
       // Fetch cart from backend (authenticated users only)
       fetchCart: async () => {
         try {
-          set({ loading: true, error: null })
+          set({ loading: true, error: null });
 
-          const token = localStorage.getItem('token')
+          const token = localStorage.getItem("token");
           if (!token) {
-            // For guests, keep existing local cart
-            set({ loading: false, isGuest: true })
-            return
+            set({ loading: false, isGuest: true });
+            return;
           }
 
           const response = await fetch(`${import.meta.env.VITE_API_URL}/cart`, {
             headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          })
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          });
 
           if (!response.ok) {
-            console.warn('Failed to fetch cart from backend, using local cart')
-            set({ loading: false, isGuest: true })
-            return
+            console.warn("Failed to fetch cart from backend, using local cart");
+            set({ loading: false, isGuest: true });
+            return;
           }
 
-          const data = await response.json()
+          const data = await response.json();
           if (data.success) {
-            set({ 
-              items: data.data.cart.items || [],
+            // ✅ Transform backend items before setting state
+            const transformedItems = get().transformCartItems(
+              data.data.cart.items
+            );
+
+            set({
+              items: transformedItems,
               loading: false,
-              isGuest: false
-            })
+              isGuest: false,
+            });
           }
         } catch (error) {
-          console.error('Fetch cart error:', error)
-          set({ error: error.message, loading: false, isGuest: true })
+          console.error("Fetch cart error:", error);
+          set({ error: error.message, loading: false, isGuest: true });
         }
       },
 
       // Helper method to add item locally
       addItemLocally: (product) => {
-        const { items } = get()
-        const existingItem = items.find(item => 
-          (item._id || item.id) === (product._id || product.id)
-        )
+        const { items } = get();
+        const existingItem = items.find(
+          (item) => (item._id || item.id) === (product._id || product.id)
+        );
 
-        let newItems
+        let newItems;
         if (existingItem) {
-          newItems = items.map(item =>
+          newItems = items.map((item) =>
             (item._id || item.id) === (product._id || product.id)
               ? { ...item, quantity: item.quantity + 1 }
               : item
-          )
+          );
         } else {
+          // ✅ Extract image URL from object or array
+          let imageUrl = "";
+          const rawImage = product.images?.[0] || product.image;
+
+          if (typeof rawImage === "string") {
+            imageUrl = rawImage;
+          } else if (rawImage && typeof rawImage === "object") {
+            imageUrl =
+              rawImage.url || rawImage.secure_url || rawImage.link || "";
+          }
+
           const cartItem = {
             _id: product._id || product.id,
             id: product._id || product.id,
             name: product.name,
             price: product.price,
-            image: product.image || (product.images && product.images[0]) || '',
+            image: imageUrl, // ✅ Now properly extracted
             category: product.category,
-            quantity: 1
-          }
-          newItems = [...items, cartItem]
+            quantity: 1,
+          };
+          newItems = [...items, cartItem];
         }
 
-        set({ 
+        set({
           items: newItems,
           loading: false,
           isGuest: true,
-          error: null
-        })
+          error: null,
+        });
 
-        // Show success notification
-        get().showSuccessNotification(product.name)
+        get().showSuccessNotification(product.name);
       },
 
       // Show success notification
       showSuccessNotification: (productName) => {
-        const notification = document.createElement("div")
-        notification.className = "fixed top-20 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 text-sm"
-        notification.textContent = `${productName} added to cart!`
-        document.body.appendChild(notification)
+        const notification = document.createElement("div");
+        notification.className =
+          "fixed top-20 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 text-sm";
+        notification.textContent = `${productName} added to cart!`;
+        document.body.appendChild(notification);
 
         setTimeout(() => {
           if (document.body.contains(notification)) {
-            document.body.removeChild(notification)
+            document.body.removeChild(notification);
           }
-        }, 3000)
+        }, 3000);
       },
 
-      // Add item to cart (supports both guest and authenticated users)
+      // Add item to cart
       addItem: async (product) => {
         try {
-          set({ loading: true, error: null })
+          set({ loading: true, error: null });
 
-          const token = localStorage.getItem('token')
+          const token = localStorage.getItem("token");
 
-          // For guest users - store locally
           if (!token) {
-            get().addItemLocally(product)
-            return
+            get().addItemLocally(product);
+            return;
           }
 
-          // For authenticated users - try backend first
           try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/cart/add`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                productId: product._id || product.id,
-                quantity: 1
-              })
-            })
+            const response = await fetch(
+              `${import.meta.env.VITE_API_URL}/cart/add`,
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  productId: product._id || product.id,
+                  quantity: 1,
+                }),
+              }
+            );
 
-            const data = await response.json()
+            const data = await response.json();
 
             if (!response.ok) {
-              throw new Error(data.message || 'Backend cart failed')
+              throw new Error(data.message || "Backend cart failed");
             }
 
             if (data.success) {
-              set({ 
-                items: data.data.cart.items,
-                loading: false,
-                isGuest: false
-              })
+              // ✅ Transform backend items before setting state
+              const transformedItems = get().transformCartItems(
+                data.data.cart.items
+              );
 
-              get().showSuccessNotification(product.name)
-              return
+              set({
+                items: transformedItems,
+                loading: false,
+                isGuest: false,
+              });
+
+              get().showSuccessNotification(product.name);
+              return;
             }
           } catch (apiError) {
-            console.warn('Backend cart failed, using local cart:', apiError.message)
-            // Fall back to local storage
-            get().addItemLocally(product)
-            return
+            console.warn(
+              "Backend cart failed, using local cart:",
+              apiError.message
+            );
+            get().addItemLocally(product);
+            return;
           }
-
         } catch (error) {
-          console.error('Add to cart error:', error)
-          // Fallback to local storage if everything fails
-          get().addItemLocally(product)
+          console.error("Add to cart error:", error);
+          get().addItemLocally(product);
         }
       },
 
-      // Remove item (supports both guest and authenticated users)
+      // Remove item
       removeItem: async (productId) => {
         try {
-          set({ loading: true, error: null })
+          set({ loading: true, error: null });
 
-          const token = localStorage.getItem('token')
-          const { isGuest } = get()
+          const token = localStorage.getItem("token");
+          const { isGuest } = get();
 
-          // For guest users or when API is unavailable - remove locally
           if (!token || isGuest) {
-            const { items } = get()
-            const newItems = items.filter(item => 
-              (item._id || item.id) !== productId
-            )
-            set({ 
+            const { items } = get();
+            const newItems = items.filter(
+              (item) => (item._id || item.id) !== productId
+            );
+            set({
               items: newItems,
-              loading: false
-            })
-            return
+              loading: false,
+            });
+            return;
           }
 
-          // For authenticated users - try backend first
           try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/cart/remove/${productId}`, {
-              method: 'DELETE',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
+            const response = await fetch(
+              `${import.meta.env.VITE_API_URL}/cart/remove/${productId}`,
+              {
+                method: "DELETE",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
               }
-            })
+            );
 
             if (!response.ok) {
-              throw new Error('Backend remove failed')
+              throw new Error("Backend remove failed");
             }
 
-            const data = await response.json()
+            const data = await response.json();
 
             if (data.success) {
-              set({ 
-                items: data.data.cart.items,
-                loading: false
-              })
-              return
+              // ✅ Transform backend items before setting state
+              const transformedItems = get().transformCartItems(
+                data.data.cart.items
+              );
+
+              set({
+                items: transformedItems,
+                loading: false,
+              });
+              return;
             }
           } catch (apiError) {
-            console.warn('Backend remove failed, using local removal:', apiError.message)
+            console.warn(
+              "Backend remove failed, using local removal:",
+              apiError.message
+            );
           }
 
-          // Fallback to local removal
-          const { items } = get()
-          const newItems = items.filter(item => 
-            (item._id || item.id) !== productId
-          )
-          set({ 
-            items: newItems,
-            loading: false,
-            isGuest: true
-          })
-
-        } catch (error) {
-          console.error('Remove item error:', error)
-          // Final fallback to local removal
-          const { items } = get()
-          const newItems = items.filter(item => 
-            (item._id || item.id) !== productId
-          )
-          set({ 
+          const { items } = get();
+          const newItems = items.filter(
+            (item) => (item._id || item.id) !== productId
+          );
+          set({
             items: newItems,
             loading: false,
             isGuest: true,
-            error: null
-          })
+          });
+        } catch (error) {
+          console.error("Remove item error:", error);
+          const { items } = get();
+          const newItems = items.filter(
+            (item) => (item._id || item.id) !== productId
+          );
+          set({
+            items: newItems,
+            loading: false,
+            isGuest: true,
+            error: null,
+          });
         }
       },
 
-      // Update quantity (supports both guest and authenticated users)
+      // Update quantity
       updateQuantity: async (productId, quantity) => {
-        if (quantity < 1) return
+        if (quantity < 1) return;
 
         try {
-          set({ loading: true, error: null })
+          set({ loading: true, error: null });
 
-          const token = localStorage.getItem('token')
-          const { isGuest } = get()
+          const token = localStorage.getItem("token");
+          const { isGuest } = get();
 
-          // For guest users or when API is unavailable - update locally
           if (!token || isGuest) {
-            const { items } = get()
-            const newItems = items.map(item =>
-              (item._id || item.id) === productId
-                ? { ...item, quantity }
-                : item
-            )
-            set({ 
+            const { items } = get();
+            const newItems = items.map((item) =>
+              (item._id || item.id) === productId ? { ...item, quantity } : item
+            );
+            set({
               items: newItems,
-              loading: false
-            })
-            return
+              loading: false,
+            });
+            return;
           }
 
-          // For authenticated users - try backend first
           try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/cart/update/${productId}`, {
-              method: 'PUT',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ quantity })
-            })
+            const response = await fetch(
+              `${import.meta.env.VITE_API_URL}/cart/update/${productId}`,
+              {
+                method: "PUT",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ quantity }),
+              }
+            );
 
             if (!response.ok) {
-              throw new Error('Backend update failed')
+              throw new Error("Backend update failed");
             }
 
-            const data = await response.json()
+            const data = await response.json();
 
             if (data.success) {
-              set({ 
-                items: data.data.cart.items,
-                loading: false
-              })
-              return
+              // ✅ Transform backend items before setting state
+              const transformedItems = get().transformCartItems(
+                data.data.cart.items
+              );
+
+              set({
+                items: transformedItems,
+                loading: false,
+              });
+              return;
             }
           } catch (apiError) {
-            console.warn('Backend update failed, using local update:', apiError.message)
+            console.warn(
+              "Backend update failed, using local update:",
+              apiError.message
+            );
           }
 
-          // Fallback to local update
-          const { items } = get()
-          const newItems = items.map(item =>
-            (item._id || item.id) === productId
-              ? { ...item, quantity }
-              : item
-          )
-          set({ 
-            items: newItems,
-            loading: false,
-            isGuest: true
-          })
-
-        } catch (error) {
-          console.error('Update quantity error:', error)
-          // Final fallback to local update
-          const { items } = get()
-          const newItems = items.map(item =>
-            (item._id || item.id) === productId
-              ? { ...item, quantity }
-              : item
-          )
-          set({ 
+          const { items } = get();
+          const newItems = items.map((item) =>
+            (item._id || item.id) === productId ? { ...item, quantity } : item
+          );
+          set({
             items: newItems,
             loading: false,
             isGuest: true,
-            error: null
-          })
+          });
+        } catch (error) {
+          console.error("Update quantity error:", error);
+          const { items } = get();
+          const newItems = items.map((item) =>
+            (item._id || item.id) === productId ? { ...item, quantity } : item
+          );
+          set({
+            items: newItems,
+            loading: false,
+            isGuest: true,
+            error: null,
+          });
         }
       },
 
-      // Clear cart (supports both guest and authenticated users)
+      // Clear cart
       clearCart: async () => {
         try {
-          set({ loading: true, error: null })
+          set({ loading: true, error: null });
 
-          const token = localStorage.getItem('token')
-          const { isGuest } = get()
+          const token = localStorage.getItem("token");
+          const { isGuest } = get();
 
-          // For guest users or when API is unavailable - clear locally
           if (!token || isGuest) {
-            set({ 
+            set({
               items: [],
-              loading: false
-            })
-            return
+              loading: false,
+            });
+            return;
           }
 
-          // For authenticated users - try backend first
           try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/cart/clear`, {
-              method: 'DELETE',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
+            const response = await fetch(
+              `${import.meta.env.VITE_API_URL}/cart/clear`,
+              {
+                method: "DELETE",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
               }
-            })
+            );
 
             if (!response.ok) {
-              throw new Error('Backend clear failed')
+              throw new Error("Backend clear failed");
             }
 
-            const data = await response.json()
+            const data = await response.json();
 
             if (data.success) {
-              set({ 
+              set({
                 items: [],
-                loading: false
-              })
-              return
+                loading: false,
+              });
+              return;
             }
           } catch (apiError) {
-            console.warn('Backend clear failed, using local clear:', apiError.message)
+            console.warn(
+              "Backend clear failed, using local clear:",
+              apiError.message
+            );
           }
 
-          // Fallback to local clear
-          set({ 
-            items: [],
-            loading: false,
-            isGuest: true
-          })
-
-        } catch (error) {
-          console.error('Clear cart error:', error)
-          // Final fallback to local clear
-          set({ 
+          set({
             items: [],
             loading: false,
             isGuest: true,
-            error: null
-          })
+          });
+        } catch (error) {
+          console.error("Clear cart error:", error);
+          set({
+            items: [],
+            loading: false,
+            isGuest: true,
+            error: null,
+          });
         }
       },
 
       // Sync local cart to backend when user logs in
       syncCartToBackend: async () => {
-        const token = localStorage.getItem('token')
-        const { items, isGuest } = get()
+        const token = localStorage.getItem("token");
+        const { items, isGuest } = get();
 
         if (!token || !isGuest || !items.length) {
-          return
+          return;
         }
 
         try {
-          set({ loading: true })
+          set({ loading: true });
 
-          // Add each local item to backend cart
           for (const item of items) {
             try {
               await fetch(`${import.meta.env.VITE_API_URL}/cart/add`, {
-                method: 'POST',
+                method: "POST",
                 headers: {
-                  'Authorization': `Bearer ${token}`,
-                  'Content-Type': 'application/json'
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
                   productId: item._id || item.id,
-                  quantity: item.quantity
-                })
-              })
+                  quantity: item.quantity,
+                }),
+              });
             } catch (itemError) {
-              console.warn(`Failed to sync item ${item.name}:`, itemError)
+              console.warn(`Failed to sync item ${item.name}:`, itemError);
             }
           }
 
-          // Fetch updated cart from backend
-          await get().fetchCart()
+          await get().fetchCart();
         } catch (error) {
-          console.error('Cart sync error:', error)
-          set({ loading: false })
+          console.error("Cart sync error:", error);
+          set({ loading: false });
         }
       },
 
       // Helper functions
       getTotal: () => {
-        const { items } = get()
+        const { items } = get();
         return items.reduce((total, item) => {
-          const price = typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0
-          return total + (price * item.quantity)
-        }, 0)
+          const price =
+            typeof item.price === "number"
+              ? item.price
+              : parseFloat(item.price) || 0;
+          return total + price * item.quantity;
+        }, 0);
       },
 
       getItemCount: () => {
-        const { items } = get()
-        return items.reduce((count, item) => count + item.quantity, 0)
+        const { items } = get();
+        return items.reduce((count, item) => count + item.quantity, 0);
       },
 
-      // Clear local cart (for logout)
       clearLocalCart: () => {
-        set({ items: [], error: null, isGuest: false })
+        set({ items: [], error: null, isGuest: false });
       },
 
-      // Check if user has items
       hasItems: () => {
-        const { items } = get()
-        return items.length > 0
+        const { items } = get();
+        return items.length > 0;
       },
 
-      // Get guest status
       isGuestMode: () => {
-        const { isGuest } = get()
-        return isGuest
+        const { isGuest } = get();
+        return isGuest;
       },
 
-      // Force local mode (useful for development/testing)
       forceLocalMode: () => {
-        set({ isGuest: true })
-      }
-
+        set({ isGuest: true });
+      },
     }),
     {
-      name: 'cart-storage',
-      version: 2, // Increment version to handle schema changes
+      name: "cart-storage",
+      version: 3, // ✅ Increment version to clear old cached data
     }
   )
-)
+);
 
-export default useCartStore
+export default useCartStore;

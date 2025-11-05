@@ -65,7 +65,7 @@ const Navbar = () => {
 
   return (
     <motion.nav
-      className="bg-white shadow-sm sticky top-0 z-50"
+      className="bg-white shadow-sm sticky top-0 z-50 p-0.5"
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.5 }}
@@ -74,7 +74,7 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className="ml-3 w-17 h-17 rounded-lg flex items-center justify-center">
+            <div className="ml-3 w-18 h-18 rounded-lg flex items-center justify-center">
               <img src="/Mindy Munchs_Logo-01.png" alt="Mindy Munchs" />
             </div>
           </Link>
