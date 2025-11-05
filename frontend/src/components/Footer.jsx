@@ -145,7 +145,7 @@ const Footer = () => {
     {
       name: "Amazon",
       target: "_blank",
-      href: "https://www.amazon.in/s?k=Mindy+Munchs&ref=bl_dp_s_web_0",
+      href: "https://www.amazon.in/Makhana-Hi-Protein-Heart-Healthy-Anti-Aging-Superfood/dp/B0FRFP22GY/ref=sr_1_3?sr=8-3",
       logoSrc: "/amazon-logo.png", // Replace with your actual logo path
     },
     {
