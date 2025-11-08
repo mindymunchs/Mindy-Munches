@@ -19,7 +19,8 @@ const videoTestimonialSchema = new mongoose.Schema({
   },
   thumbnail: {
     type: String,
-    required: true
+    required: false, // ✅ Make optional - will be auto-generated on frontend
+    default: '' // Empty string if not provided
   },
   fullQuote: {
     type: String,

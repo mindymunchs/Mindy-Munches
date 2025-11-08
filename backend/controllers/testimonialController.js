@@ -3,7 +3,7 @@ const Testimonial = require('../models/Testimonial');
 // Get all testimonials from MongoDB
 const getAllTestimonials = async (req, res) => {
   try {
-    const testimonials = await Testimonial.find({}).sort({ createdAt: -1 }); // latest first
+    const testimonials = await Testimonial.find({}).sort({ createdAt: -1 });
     res.json({
       success: true,
       testimonials,
@@ -18,39 +18,95 @@ const getAllTestimonials = async (req, res) => {
   }
 };
 
-// Get static/dummy video testimonials (or you can extend to DB)
-const getVideoTestimonials = (req, res) => {
+// CREATE - Add new testimonial
+const createTestimonial = async (req, res) => {
   try {
-    const videoTestimonials = [
-      {
-        id: 1,
-        name: "Dr. Anjali Mehta",
-        title: "Nutritionist",
-        videoUrl: "/videos/testimonial1.mp4",
-        thumbnail: "/images/video-thumb1.jpg",
-        message: "I recommend Mindy Munchs to all my patients for their organic quality.",
-        duration: "2:30",
-        location: "Chennai, India"
-      },
-      {
-        id: 2,
-        name: "Chef Vikram Singh",
-        title: "Professional Chef",
-        videoUrl: "/videos/testimonial2.mp4",
-        thumbnail: "/images/video-thumb2.jpg",
-        message: "The spices and oils from Mindy Munchs elevate every dish I create.",
-        duration: "1:45",
-        location: "Pune, India"
-      }
-    ];
-    res.json({
+    const { name, message, rating } = req.body;
+
+    if (!name || !message) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name and message are required',
+      });
+    }
+
+    const newTestimonial = new Testimonial({
+      name,
+      message,
+      rating: rating || 5,
+    });
+
+    await newTestimonial.save();
+
+    res.status(201).json({
       success: true,
-      videos: videoTestimonials,
+      message: 'Testimonial created successfully',
+      testimonial: newTestimonial,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch video testimonials',
+      message: 'Failed to create testimonial',
+      error: error.message,
+    });
+  }
+};
+
+// UPDATE - Edit existing testimonial
+const updateTestimonial = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, message, rating } = req.body;
+
+    const updatedTestimonial = await Testimonial.findByIdAndUpdate(
+      id,
+      { name, message, rating },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedTestimonial) {
+      return res.status(404).json({
+        success: false,
+        message: 'Testimonial not found',
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Testimonial updated successfully',
+      testimonial: updatedTestimonial,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update testimonial',
+      error: error.message,
+    });
+  }
+};
+
+// DELETE - Remove testimonial
+const deleteTestimonial = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deletedTestimonial = await Testimonial.findByIdAndDelete(id);
+
+    if (!deletedTestimonial) {
+      return res.status(404).json({
+        success: false,
+        message: 'Testimonial not found',
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Testimonial deleted successfully',
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete testimonial',
       error: error.message,
     });
   }
@@ -58,5 +114,7 @@ const getVideoTestimonials = (req, res) => {
 
 module.exports = {
   getAllTestimonials,
-  getVideoTestimonials,
+  createTestimonial,
+  updateTestimonial,
+  deleteTestimonial,
 };

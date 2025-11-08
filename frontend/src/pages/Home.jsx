@@ -28,6 +28,7 @@ const Home = () => {
   // scrollRef for testimonial sections
   const scrollRef = useRef(null);
   const videoScrollRef = useRef(null);
+  const videoTestimonialsRef = useRef(null); // ✅ ADD THIS LINE
 
   // Media query hook to detect mobile/desktop with debouncing
   useEffect(() => {
@@ -230,7 +231,7 @@ const Home = () => {
         //   );
         // };
 
-        if (!import.meta.env.VITE_API_URL ) {
+        if (!import.meta.env.VITE_API_URL) {
           throw new Error("API URL is not defined");
         }
 
@@ -986,7 +987,10 @@ const Home = () => {
       </section>
 
       {/* Combined Testimonials Section - Video (9:16) and Text - INCREASED HEIGHT */}
-      <section className="py-20 md:py-24 bg-gradient-to-br from-orange-50 via-yellow-50 to-orange-100 overflow-x-hidden min-h-screen">
+      <section
+        ref={videoTestimonialsRef}
+        className="py-20 md:py-24 bg-gradient-to-br from-orange-50 via-yellow-50 to-orange-100 overflow-x-hidden min-h-screen"
+      >
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             className="text-center mb-8"
@@ -1048,11 +1052,28 @@ const Home = () => {
                     style={{ scrollSnapAlign: "start" }}
                     onClick={() => setActiveVideo(testimonial)}
                   >
-                    <img
-                      src={testimonial.thumbnail}
-                      alt={`${testimonial.name} testimonial`}
-                      className="w-full h-full object-cover"
-                    />
+                    {testimonial.thumbnail ? (
+                      <img
+                        src={testimonial.thumbnail}
+                        alt={`${testimonial.name} testimonial`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          // Fallback: Show video if image fails to load
+                          e.target.style.display = "none";
+                          const videoElement = document.createElement("video");
+                          videoElement.src = testimonial.videoSrc;
+                          videoElement.className = "w-full h-full object-cover";
+                          videoElement.preload = "metadata";
+                          e.target.parentNode.appendChild(videoElement);
+                        }}
+                      />
+                    ) : (
+                      <video
+                        src={testimonial.videoSrc}
+                        className="w-full h-full object-cover"
+                        preload="metadata"
+                      />
+                    )}
 
                     {/* Overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
@@ -1235,7 +1256,13 @@ const Home = () => {
           {/* Video Modal */}
           {activeVideo && (
             <motion.div
-              className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+              className="absolute inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+              style={{
+                top: videoTestimonialsRef.current?.offsetTop || 0,
+                left: 0,
+                right: 0,
+                height: "100vh",
+              }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}

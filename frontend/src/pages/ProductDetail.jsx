@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
+
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import useCartStore from "../store/cartStore";
@@ -7,6 +8,56 @@ import useAuthStore from "../store/authStore";
 import Loader from "../components/Loader";
 import ProductCard from "../components/ProductCard";
 import { formatPrice } from "../utils/priceUtils";
+
+const ImageZoom = ({ src, alt }) => {
+  const [isZooming, setIsZooming] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const imageRef = useRef(null);
+
+  const handleMouseMove = (e) => {
+    if (!imageRef.current) return;
+
+    const rect = imageRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    setPosition({ x, y });
+  };
+
+  const handleMouseEnter = () => setIsZooming(true);
+  const handleMouseLeave = () => setIsZooming(false);
+
+  return (
+    <div
+      className="relative aspect-square overflow-hidden rounded-2xl bg-white shadow-lg cursor-crosshair"
+      ref={imageRef}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <img
+        src={src}
+        alt={alt}
+        className="w-full h-full object-cover transition-transform duration-200"
+        style={{
+          transform: isZooming ? "scale(2)" : "scale(1)",
+          transformOrigin: `${position.x}% ${position.y}%`,
+        }}
+        onLoad={() => console.log("Image loaded:", src)}
+        onError={(e) => {
+          console.error("Image failed to load:", e.target.src);
+          e.target.src =
+            "https://via.placeholder.com/400x400/f3f4f6/9ca3af?text=Image+Not+Found";
+        }}
+      />
+      {isZooming && (
+        <div className="absolute bottom-4 right-4 bg-black/70 text-white text-xs px-3 py-1 rounded-full backdrop-blur-sm">
+          🔍 Zoomed
+        </div>
+      )}
+    </div>
+  );
+};
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -320,49 +371,42 @@ const ProductDetail = () => {
               transition={{ duration: 0.6 }}
             >
               {/* Main Image */}
-              <div className="relative aspect-square overflow-hidden rounded-2xl bg-white shadow-lg">
+              <div>
                 {productImages.length > 0 ? (
                   <AnimatePresence mode="wait">
-                    <motion.img
+                    <motion.div
                       key={`${product.id}-${selectedImageIndex}`}
-                      src={productImages[selectedImageIndex]}
-                      alt={`${product.name} - View ${selectedImageIndex + 1}`}
-                      className="w-full h-full object-cover"
                       initial={{ opacity: 0, scale: 1.1 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ duration: 0.5 }}
-                      onLoad={() =>
-                        console.log(
-                          "Image loaded:",
-                          productImages[selectedImageIndex]
-                        )
-                      }
-                      onError={(e) => {
-                        console.error("Image failed to load:", e.target.src);
-                        e.target.src =
-                          "https://via.placeholder.com/400x400/f3f4f6/9ca3af?text=Image+Not+Found";
-                      }}
-                    />
+                    >
+                      <ImageZoom
+                        src={productImages[selectedImageIndex]}
+                        alt={`${product.name} - View ${selectedImageIndex + 1}`}
+                      />
+                    </motion.div>
                   </AnimatePresence>
                 ) : (
-                  // Fallback when no images are available
-                  <div className="w-full h-full bg-gradient-to-br from-neutral-100 to-neutral-200 flex items-center justify-center">
-                    <div className="text-center text-neutral-500">
-                      <svg
-                        className="w-16 h-16 mx-auto mb-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                      <p className="text-sm">No image available</p>
+                  /* Fallback when no images are available */
+                  <div className="relative aspect-square overflow-hidden rounded-2xl bg-white shadow-lg">
+                    <div className="w-full h-full bg-gradient-to-br from-neutral-100 to-neutral-200 flex items-center justify-center">
+                      <div className="text-center text-neutral-500">
+                        <svg
+                          className="w-16 h-16 mx-auto mb-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                        <p className="text-sm">No image available</p>
+                      </div>
                     </div>
                   </div>
                 )}

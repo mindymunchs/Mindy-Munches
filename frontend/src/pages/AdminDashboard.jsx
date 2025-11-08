@@ -12,6 +12,7 @@ import StockManagement from "../components/admin/StockManagement";
 import AdminManagement from "../components/admin/AdminManagement";
 import OrderManagement from "../components/admin/OrderManagement";
 import Analytics from "../components/admin/Analytics";
+import TestimonialManagement from "../components/admin/TestimonialManagement";
 
 const AdminDashboard = () => {
   const location = useLocation();
@@ -56,6 +57,12 @@ const AdminDashboard = () => {
     { id: "products", label: "Products", icon: "📦", path: "/admin/products" },
     { id: "stock", label: "Stock", icon: "📋", path: "/admin/stock" },
     { id: "orders", label: "Orders", icon: "🛒", path: "/admin/orders" },
+    {
+      id: "testimonials",
+      label: "Testimonials",
+      icon: "💬",
+      path: "/admin/testimonials",
+    }, // ✅ ADD THIS
     {
       id: "analytics",
       label: "Analytics",
@@ -191,7 +198,6 @@ const AdminDashboard = () => {
           {/* Dashboard Content */}
           <main className="p-6">
             <Routes>
-              {/* Pass the stats, loading, and error states as props to AdminOverview */}
               <Route
                 path="/"
                 element={
@@ -205,9 +211,13 @@ const AdminDashboard = () => {
               <Route path="/products" element={<ProductManagement />} />
               <Route path="/stock" element={<StockManagement />} />
               <Route path="/orders" element={<OrderManagement />} />
+              <Route
+                path="/testimonials"
+                element={<TestimonialManagement />}
+              />{" "}
+              {/* ✅ ADD THIS */}
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/admins" element={<AdminManagement />} />
-              <Route path="*" element={<Navigate to="/admin" replace />} />
             </Routes>
           </main>
         </div>

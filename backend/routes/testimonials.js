@@ -1,12 +1,10 @@
 const express = require('express');
 const router = express.Router();
+const { getAllTestimonials } = require('../controllers/testimonialController');
+const { getAllVideoTestimonials } = require('../controllers/videoTestimonialController');
 
-const {
-  getAllTestimonials,
-  getVideoTestimonials
-} = require('../controllers/testimonialController');
-
+// Public routes (no auth required)
 router.get('/', getAllTestimonials);
-router.get('/videos', getVideoTestimonials);
+router.get('/video-testimonials', getAllVideoTestimonials);
 
 module.exports = router;
