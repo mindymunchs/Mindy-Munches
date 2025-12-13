@@ -3,10 +3,12 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 
+
 const Footer = () => {
   const currentYear = new Date().getFullYear();
   const [openDropdown, setOpenDropdown] = useState(null);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
+
 
   // Newsletter subscription states
   const [email, setEmail] = useState("");
@@ -14,9 +16,11 @@ const Footer = () => {
   const [subscriptionMessage, setSubscriptionMessage] = useState("");
   const [subscriptionStatus, setSubscriptionStatus] = useState("");
 
+
   // Newsletter subscription handler
   const handleNewsletterSubmit = async (e) => {
     e.preventDefault();
+
 
     if (!email.trim()) {
       setSubscriptionMessage("Please enter a valid email address");
@@ -24,8 +28,10 @@ const Footer = () => {
       return;
     }
 
+
     setIsSubscribing(true);
     setSubscriptionMessage("");
+
 
     try {
       const response = await fetch(
@@ -42,7 +48,9 @@ const Footer = () => {
         }
       );
 
+
       const data = await response.json();
+
 
       if (data.success) {
         setSubscriptionMessage(data.message);
@@ -65,6 +73,7 @@ const Footer = () => {
     }
   };
 
+
   // More reliable touch device detection using media queries
   useEffect(() => {
     const checkTouchDevice = () => {
@@ -72,18 +81,23 @@ const Footer = () => {
       const noHover = window.matchMedia("(hover: none)").matches;
       const isSmallScreen = window.matchMedia("(max-width: 1023px)").matches;
 
+
       setIsTouchDevice(hasCoarsePointer || noHover || isSmallScreen);
     };
 
+
     checkTouchDevice();
+
 
     const coarsePointerQuery = window.matchMedia("(pointer: coarse)");
     const hoverQuery = window.matchMedia("(hover: none)");
     const screenSizeQuery = window.matchMedia("(max-width: 1023px)");
 
+
     coarsePointerQuery.addEventListener("change", checkTouchDevice);
     hoverQuery.addEventListener("change", checkTouchDevice);
     screenSizeQuery.addEventListener("change", checkTouchDevice);
+
 
     return () => {
       coarsePointerQuery.removeEventListener("change", checkTouchDevice);
@@ -91,6 +105,7 @@ const Footer = () => {
       screenSizeQuery.removeEventListener("change", checkTouchDevice);
     };
   }, []);
+
 
   const footerLinks = {
     company: [
@@ -111,6 +126,7 @@ const Footer = () => {
       { name: "Terms and Conditions", href: "/terms-and-conditions" },
     ],
   };
+
 
   const socialLinks = [
     {
@@ -136,6 +152,7 @@ const Footer = () => {
     },
   ];
 
+
   // Available on platforms - round logos without hyperlinks
   const availablePlatforms = [
     {
@@ -155,6 +172,7 @@ const Footer = () => {
     },
   ];
 
+
   const toggleDropdown = (section) => {
     if (openDropdown === section) {
       setOpenDropdown(null);
@@ -163,11 +181,13 @@ const Footer = () => {
     }
   };
 
+
   const handleClickOutside = () => {
     if (isTouchDevice) {
       setOpenDropdown(null);
     }
   };
+
 
   return (
     <footer
@@ -183,6 +203,7 @@ const Footer = () => {
           className="w-full h-full object-cover object-center"
         />
       </div>
+
 
       {/* Content */}
       <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
@@ -205,6 +226,7 @@ const Footer = () => {
                 />
               </div>
             </Link>
+
 
             <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
               <span
@@ -231,6 +253,7 @@ const Footer = () => {
             </div>
           </div>
 
+
           {/* Center: Newsletter Signup */}
           <div className="text-center flex flex-col items-center gap-6 sm:gap-8 lg:gap-10 px-2">
             <p
@@ -240,6 +263,7 @@ const Footer = () => {
               Subscribe for special offers, newsletters and become a part of our
               movement towards traditional Indian superfoods
             </p>
+
 
             <form
               onSubmit={handleNewsletterSubmit}
@@ -278,6 +302,7 @@ const Footer = () => {
               </button>
             </form>
 
+
             {/* Subscription feedback message */}
             {subscriptionMessage && (
               <motion.div
@@ -294,16 +319,16 @@ const Footer = () => {
             )}
           </div>
 
+
           {/* Right: Location + Available On */}
           <div className="text-center lg:text-right space-y-3 sm:space-y-4">
-            <p
-              className="font-semibold text-sm sm:text-base"
-              style={{ color: "#1C1E19" }}
-            >
-               For Bulk Order Write Us At
-            </p>
+            <div className="font-semibold text-sm sm:text-base leading-relaxed" style={{ color: "#1C1E19" }}>
+              <div>8/5, SITE-IV, Sahibabad Road,</div>
+              <div>Sahibabad Industrial Area,</div>
+              <div>Ghaziabad, Uttar Pradesh - 201301</div>
+            </div>
             <div className="text-sm sm:text-base" style={{ color: "#1C1E19" }}>
-              <span className="font-medium"></span>
+              <span className="font-medium">For Bulk Order Write Us At: </span>
               <a
                 href="mailto:wecare@mindymunchs.com"
                 className="underline hover:text-primary-600 transition-colors duration-200 break-all"
@@ -313,6 +338,7 @@ const Footer = () => {
               </a>
             </div>
 
+
             {/* Available On Section - Fixed to center-align text with circles */}
             <div className="flex flex-col sm:flex-row items-center lg:items-center lg:justify-end gap-3 sm:gap-4 mt-18">
               <span
@@ -321,6 +347,7 @@ const Footer = () => {
               >
                 Available on:
               </span>
+
 
               <div className="flex gap-3 sm:gap-6">
                 {availablePlatforms.map((platform) =>
@@ -368,6 +395,7 @@ const Footer = () => {
           </div>
         </motion.div>
 
+
         {/* Dropdown Navigation Links - Responsive Grid (Position unchanged) */}
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:flex lg:flex-wrap lg:justify-center gap-6 sm:gap-8 lg:gap-12 mb-12 sm:mb-16 lg:mb-20">
           {Object.entries(footerLinks).map(([section, links], index) => (
@@ -412,6 +440,7 @@ const Footer = () => {
                   </svg>
                 </button>
 
+
                 {/* Dropdown Menu - Position unchanged */}
                 <div
                   className={`absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-40 sm:w-48 bg-white rounded-lg shadow-xl border border-gray-200 transition-all duration-300 z-20 ${
@@ -448,5 +477,6 @@ const Footer = () => {
     </footer>
   );
 };
+
 
 export default Footer;
