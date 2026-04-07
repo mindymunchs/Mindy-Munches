@@ -104,10 +104,19 @@ const Navbar = () => {
             <Link
               to="/story"
               className={`text-base md:text-[17px] font-semibold transition-colors hover:text-primary-500 ${
-                isActive("/products") ? "text-primary-500" : "text-neutral-700"
+                isActive("/story") ? "text-primary-500" : "text-neutral-700"
               }`}
             >
               Our Story
+            </Link>
+
+            <Link
+              to="/connect"
+              className={`text-base md:text-[17px] font-semibold transition-colors hover:text-primary-500 ${
+                isActive("/connect") ? "text-primary-500" : "text-neutral-700"
+              }`}
+            >
+              Connect
             </Link>
 
             {/* Admin Link - Only show if user is authenticated AND admin */}
@@ -396,7 +405,7 @@ const Navbar = () => {
                     to="/story"
                     onClick={() => setShowMobileMenu(false)}
                     className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
-                      isActive("/products")
+                      isActive("/story")
                         ? "bg-primary-50 text-primary-600"
                         : "text-neutral-700 hover:bg-neutral-50"
                     }`}
@@ -415,6 +424,31 @@ const Navbar = () => {
                       />
                     </svg>
                     <span className="font-semibold">Our Story</span>
+                  </Link>
+
+                  <Link
+                    to="/connect"
+                    onClick={() => setShowMobileMenu(false)}
+                    className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                      isActive("/connect")
+                        ? "bg-primary-50 text-primary-600"
+                        : "text-neutral-700 hover:bg-neutral-50"
+                    }`}
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 4v-4z"
+                      />
+                    </svg>
+                    <span className="font-semibold">Connect</span>
                   </Link>
 
                   {/* Cart - Always visible in mobile menu */}

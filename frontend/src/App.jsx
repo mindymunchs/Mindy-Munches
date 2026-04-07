@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import useAuthStore from "./store/authStore";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
-// Console override for production - ADD THIS AT THE TOP
+// Console override for production
 if (process.env.NODE_ENV === 'production') {
   console.log = () => {};
   console.debug = () => {};
@@ -29,7 +29,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import BottomBar from "./components/BottomBar";
 import PaymentTest from "./components/PaymentTest";
 
-//Static Pages
+// Static Pages
 import Sattu from "./pages/Sattu";
 import Makhana from "./pages/Makhana";
 import AboutUs from "./pages/AboutUs";
@@ -40,6 +40,10 @@ import RefundPolicy from "./pages/RefundPolicy";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ContactUs from "./pages/ContactUs";
 import ShippingPolicy from "./pages/ShippingPolicy";
+import Connect from "./pages/Connect";
+
+// ✅ NEW: Import TestimonialManagement component
+import TestimonialManagement from "./components/admin/TestimonialManagement";
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -55,100 +59,24 @@ const pageTransition = {
 
 function App() {
   const location = useLocation();
-
   const { initializeAuth } = useAuthStore();
 
-  // Add this useEffect
   useEffect(() => {
     initializeAuth();
   }, [initializeAuth]);
 
   return (
-    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || ""}>
-    <div className="min-h-screen bg-neutral-50 flex flex-col overflow-x-hidden max-w-full">
-      <ScrollToTop />
-      <Navbar />
-      <main className="flex-grow">
-        <AnimatePresence mode="wait">
-          <Routes location={location} key={location.pathname}>
-            {/* Public Routes */}
-            <Route
-              path="/"
-              element={
-                <motion.div
-                  initial="initial"
-                  animate="in"
-                  exit="out"
-                  variants={pageVariants}
-                  transition={pageTransition}
-                >
-                  <Home />
-                </motion.div>
-              }
-            />
-            <Route
-              path="/products"
-              element={
-                <motion.div
-                  initial="initial"
-                  animate="in"
-                  exit="out"
-                  variants={pageVariants}
-                  transition={pageTransition}
-                >
-                  <Products />
-                </motion.div>
-              }
-            />
-            <Route
-              path="/products/:id"
-              element={
-                <motion.div
-                  initial="initial"
-                  animate="in"
-                  exit="out"
-                  variants={pageVariants}
-                  transition={pageTransition}
-                >
-                  <ProductDetail />
-                </motion.div>
-              }
-            />
-            <Route
-              path="/cart"
-              element={
-                <motion.div
-                  initial="initial"
-                  animate="in"
-                  exit="out"
-                  variants={pageVariants}
-                  transition={pageTransition}
-                >
-                  <Cart />
-                </motion.div>
-              }
-            />
-
-            <Route
-              path="/auth"
-              element={
-                <motion.div
-                  initial="initial"
-                  animate="in"
-                  exit="out"
-                  variants={pageVariants}
-                  transition={pageTransition}
-                >
-                  <Auth />
-                </motion.div>
-              }
-            />
-
-            {/* Protected User Routes */}
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <ScrollToTop />
+        <main className="flex-grow">
+          <AnimatePresence mode="wait">
+            <Routes location={location} key={location.pathname}>
+              {/* Public Routes */}
+              <Route
+                path="/"
+                element={
                   <motion.div
                     initial="initial"
                     animate="in"
@@ -156,17 +84,13 @@ function App() {
                     variants={pageVariants}
                     transition={pageTransition}
                   >
-                    <UserDashboard />
+                    <Home />
                   </motion.div>
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Checkout Route - Protected */}
-            <Route
-              path="/checkout"
-              element={
-                <ProtectedRoute>
+                }
+              />
+              <Route
+                path="/products"
+                element={
                   <motion.div
                     initial="initial"
                     animate="in"
@@ -174,32 +98,13 @@ function App() {
                     variants={pageVariants}
                     transition={pageTransition}
                   >
-                    <Checkout />
+                    <Products />
                   </motion.div>
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Admin Routes */}
-            <Route
-              path="/admin/invite/:token"
-              element={
-                <motion.div
-                  initial="initial"
-                  animate="in"
-                  exit="out"
-                  variants={pageVariants}
-                  transition={pageTransition}
-                >
-                  <AdminInvite />
-                </motion.div>
-              }
-            />
-
-            <Route
-              path="/admin/*"
-              element={
-                <ProtectedRoute requiredRole="admin">
+                }
+              />
+              <Route
+                path="/product/:slug"
+                element={
                   <motion.div
                     initial="initial"
                     animate="in"
@@ -207,175 +112,303 @@ function App() {
                     variants={pageVariants}
                     transition={pageTransition}
                   >
-                    <AdminDashboard />
+                    <ProductDetail />
                   </motion.div>
-                </ProtectedRoute>
-              }
-            />
+                }
+              />
+              <Route
+                path="/cart"
+                element={
+                  <motion.div
+                    initial="initial"
+                    animate="in"
+                    exit="out"
+                    variants={pageVariants}
+                    transition={pageTransition}
+                  >
+                    <Cart />
+                  </motion.div>
+                }
+              />
+              <Route
+                path="/auth"
+                element={
+                  <motion.div
+                    initial="initial"
+                    animate="in"
+                    exit="out"
+                    variants={pageVariants}
+                    transition={pageTransition}
+                  >
+                    <Auth />
+                  </motion.div>
+                }
+              />
 
-            <Route
-              path="/reset-password"
-              element={
-                <motion.div
-                  initial="initial"
-                  animate="in"
-                  exit="out"
-                  variants={pageVariants}
-                  transition={pageTransition}
-                >
-                  <ResetPasswordPage />
-                </motion.div>
-              }
-            />
+              {/* Protected User Routes */}
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <motion.div
+                      initial="initial"
+                      animate="in"
+                      exit="out"
+                      variants={pageVariants}
+                      transition={pageTransition}
+                    >
+                      <UserDashboard />
+                    </motion.div>
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/payment-test"
-              element={
-                <motion.div
-                  initial="initial"
-                  animate="in"
-                  exit="out"
-                  variants={pageVariants}
-                  transition={pageTransition}
-                >
-                  <PaymentTest />
-                </motion.div>
-              }
-            />
+              {/* Checkout Route - Protected */}
+              <Route
+                path="/checkout"
+                element={
+                  <ProtectedRoute>
+                    <motion.div
+                      initial="initial"
+                      animate="in"
+                      exit="out"
+                      variants={pageVariants}
+                      transition={pageTransition}
+                    >
+                      <Checkout />
+                    </motion.div>
+                  </ProtectedRoute>
+                }
+              />
 
-            {/*Static Pages*/}
-            <Route
-              path="/sattu"
-              element={
-                <motion.div
-                  initial="initial"
-                  animate="in"
-                  exit="out"
-                  variants={pageVariants}
-                  transition={pageTransition}
-                >
-                  <Sattu />
-                </motion.div>
-              }
-            />
-            <Route
-              path="/makhana"
-              element={
-                <motion.div
-                  initial="initial"
-                  animate="in"
-                  exit="out"
-                  variants={pageVariants}
-                  transition={pageTransition}
-                >
-                  <Makhana />
-                </motion.div>
-              }
-            />
-            <Route
-              path="/aboutus"
-              element={
-                <motion.div
-                  initial="initial"
-                  animate="in"
-                  exit="out"
-                  variants={pageVariants}
-                  transition={pageTransition}
-                >
-                  <AboutUs />
-                </motion.div>
-              }
-            />
-            <Route
-              path="/story"
-              element={
-                <motion.div
-                  initial="initial"
-                  animate="in"
-                  exit="out"
-                  variants={pageVariants}
-                  transition={pageTransition}
-                >
-                  <Story />
-                </motion.div>
-              }
-            />
-            <Route
-              path="/contact"
-              element={
-                <motion.div
-                  initial="initial"
-                  animate="in"
-                  exit="out"
-                  variants={pageVariants}
-                  transition={pageTransition}
-                >
-                  <ContactUs/>
-                </motion.div>
-              }
-            />
-            <Route
-              path="/terms-and-conditions"
-              element={
-                <motion.div
-                  initial="initial"
-                  animate="in"
-                  exit="out"
-                  variants={pageVariants}
-                  transition={pageTransition}
-                >
-                  <TermsAndConditions />
-                </motion.div>
-              }
-            />
-            <Route
-              path="/privacy-policy"
-              element={
-                <motion.div
-                  initial="initial"
-                  animate="in"
-                  exit="out"
-                  variants={pageVariants}
-                  transition={pageTransition}
-                >
-                  <PrivacyPolicy />
-                </motion.div>
-              }
-            />
-            <Route
-              path="/returns"
-              element={
-                <motion.div
-                  initial="initial"
-                  animate="in"
-                  exit="out"
-                  variants={pageVariants}
-                  transition={pageTransition}
-                >
-                  <RefundPolicy />
-                </motion.div>
-              }
-            />
-            <Route
-              path="/shipping-policy"
-              element={
-                <motion.div
-                  initial="initial"
-                  animate="in"
-                  exit="out"
-                  variants={pageVariants}
-                  transition={pageTransition}
-                >
-                  <ShippingPolicy />
-                </motion.div>
-              }
-            />
-          </Routes>
-        </AnimatePresence>
-      </main>
-      <Footer />
-      <BottomBar />
-    </div>
+              {/* Admin Routes */}
+              <Route
+                path="/admin/*"
+                element={
+                  <ProtectedRoute adminOnly>
+                    <motion.div
+                      initial="initial"
+                      animate="in"
+                      exit="out"
+                      variants={pageVariants}
+                      transition={pageTransition}
+                    >
+                      <AdminDashboard />
+                    </motion.div>
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* ✅ NEW: Testimonials Management Route */}
+              <Route
+                path="/admin/testimonials"
+                element={
+                  <ProtectedRoute adminOnly>
+                    <motion.div
+                      initial="initial"
+                      animate="in"
+                      exit="out"
+                      variants={pageVariants}
+                      transition={pageTransition}
+                    >
+                      <TestimonialManagement />
+                    </motion.div>
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/admin/invite"
+                element={
+                  <ProtectedRoute adminOnly>
+                    <motion.div
+                      initial="initial"
+                      animate="in"
+                      exit="out"
+                      variants={pageVariants}
+                      transition={pageTransition}
+                    >
+                      <AdminInvite />
+                    </motion.div>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/payment-test"
+                element={
+                  <motion.div
+                    initial="initial"
+                    animate="in"
+                    exit="out"
+                    variants={pageVariants}
+                    transition={pageTransition}
+                  >
+                    <PaymentTest />
+                  </motion.div>
+                }
+              />
+
+              {/* Static Pages */}
+              <Route
+                path="/sattu"
+                element={
+                  <motion.div
+                    initial="initial"
+                    animate="in"
+                    exit="out"
+                    variants={pageVariants}
+                    transition={pageTransition}
+                  >
+                    <Sattu />
+                  </motion.div>
+                }
+              />
+              <Route
+                path="/makhana"
+                element={
+                  <motion.div
+                    initial="initial"
+                    animate="in"
+                    exit="out"
+                    variants={pageVariants}
+                    transition={pageTransition}
+                  >
+                    <Makhana />
+                  </motion.div>
+                }
+              />
+              <Route
+                path="/about"
+                element={
+                  <motion.div
+                    initial="initial"
+                    animate="in"
+                    exit="out"
+                    variants={pageVariants}
+                    transition={pageTransition}
+                  >
+                    <AboutUs />
+                  </motion.div>
+                }
+              />
+              <Route
+                path="/story"
+                element={
+                  <motion.div
+                    initial="initial"
+                    animate="in"
+                    exit="out"
+                    variants={pageVariants}
+                    transition={pageTransition}
+                  >
+                    <Story />
+                  </motion.div>
+                }
+              />
+              <Route
+                path="/terms"
+                element={
+                  <motion.div
+                    initial="initial"
+                    animate="in"
+                    exit="out"
+                    variants={pageVariants}
+                    transition={pageTransition}
+                  >
+                    <TermsAndConditions />
+                  </motion.div>
+                }
+              />
+              <Route
+                path="/privacy"
+                element={
+                  <motion.div
+                    initial="initial"
+                    animate="in"
+                    exit="out"
+                    variants={pageVariants}
+                    transition={pageTransition}
+                  >
+                    <PrivacyPolicy />
+                  </motion.div>
+                }
+              />
+              <Route
+                path="/refund"
+                element={
+                  <motion.div
+                    initial="initial"
+                    animate="in"
+                    exit="out"
+                    variants={pageVariants}
+                    transition={pageTransition}
+                  >
+                    <RefundPolicy />
+                  </motion.div>
+                }
+              />
+              <Route
+                path="/reset-password/:token"
+                element={
+                  <motion.div
+                    initial="initial"
+                    animate="in"
+                    exit="out"
+                    variants={pageVariants}
+                    transition={pageTransition}
+                  >
+                    <ResetPasswordPage />
+                  </motion.div>
+                }
+              />
+              <Route
+                path="/contact"
+                element={
+                  <motion.div
+                    initial="initial"
+                    animate="in"
+                    exit="out"
+                    variants={pageVariants}
+                    transition={pageTransition}
+                  >
+                    <ContactUs />
+                  </motion.div>
+                }
+              />
+              <Route
+                path="/connect"
+                element={
+                  <motion.div
+                    initial="initial"
+                    animate="in"
+                    exit="out"
+                    variants={pageVariants}
+                    transition={pageTransition}
+                  >
+                    <Connect />
+                  </motion.div>
+                }
+              />
+              <Route
+                path="/shipping"
+                element={
+                  <motion.div
+                    initial="initial"
+                    animate="in"
+                    exit="out"
+                    variants={pageVariants}
+                    transition={pageTransition}
+                  >
+                    <ShippingPolicy />
+                  </motion.div>
+                }
+              />
+            </Routes>
+          </AnimatePresence>
+        </main>
+        <Footer />
+        <BottomBar />
+      </div>
     </GoogleOAuthProvider>
   );
 }
