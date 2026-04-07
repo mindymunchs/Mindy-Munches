@@ -5,26 +5,18 @@ const { authenticate, requireAdmin } = require('../middleware/auth');
 const { getBestsellers } = require('../controllers/productController');
 const { searchUsers, getAllAdmins, promoteUser, demoteAdmin } = require('../controllers/adminController');
 const { getStockStats, updateStock, restockLowItems } = require('../controllers/stockController');
-const { 
-  getAllTestimonials, 
-  createTestimonial, 
-  updateTestimonial, 
-  deleteTestimonial 
-} = require('../controllers/testimonialController');
-const { 
-  getAllVideoTestimonials, 
-  createVideoTestimonial, 
-  updateVideoTestimonial, 
-  deleteVideoTestimonial 
-} = require('../controllers/videoTestimonialController');
-// ✅ NEW: Import promo code controller
 const {
-  getAllPromoCodes,
-  createPromoCode,
-  updatePromoCode,
-  deletePromoCode,
-  togglePromoCodeStatus
-} = require('../controllers/promoCodeController');
+  getAllTestimonials,
+  createTestimonial,
+  updateTestimonial,
+  deleteTestimonial
+} = require('../controllers/testimonialController');
+const {
+  getAllVideoTestimonials,
+  createVideoTestimonial,
+  updateVideoTestimonial,
+  deleteVideoTestimonial
+} = require('../controllers/videoTestimonialController');
 const { getAllFeedbackForAdmin, deleteFeedbackForAdmin } = require('../controllers/feedbackController');
 
 // Protect all routes
@@ -55,12 +47,7 @@ router.post('/video-testimonials', createVideoTestimonial);
 router.put('/video-testimonials/:id', updateVideoTestimonial);
 router.delete('/video-testimonials/:id', deleteVideoTestimonial);
 
-// ✅ NEW: Promo Code routes
-router.get('/promo-codes', getAllPromoCodes);
-router.post('/promo-codes', createPromoCode);
-router.put('/promo-codes/:id', updatePromoCode);
-router.delete('/promo-codes/:id', deletePromoCode);
-router.patch('/promo-codes/:id/toggle', togglePromoCodeStatus);
+// Feedback routes
 router.get('/feedback', getAllFeedbackForAdmin);
 router.delete('/feedback/:id', deleteFeedbackForAdmin);
 

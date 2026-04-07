@@ -29,8 +29,6 @@ const adminRoutes = require("./routes/admin");
 const videoTestimonialRoutes = require("./routes/videoTestimonials");
 const newsletterRoutes = require("./routes/newsLetter");
 const paymentRoutes = require("./routes/paymentRoutes");
-const promoCodeRoutes = require('./routes/promoCodes');
-const webhookRoutes = require('./routes/webhooks');
 const feedbackRoutes = require("./routes/feedback");
 
 const app = express();
@@ -179,8 +177,6 @@ app.use("/api/admin", adminRoutes);
 app.use("/api", videoTestimonialRoutes);
 app.use("/api/newsletter", newsletterRoutes);
 app.use("/api/payments", paymentRoutes);
-app.use('/api/promo-codes', promoCodeRoutes);
-app.use('/api/webhooks', webhookRoutes);
 app.use("/api/feedback", feedbackRoutes);
 
 
