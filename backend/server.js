@@ -114,17 +114,33 @@ passport.use(new GoogleStrategy({
   }
 }));
 
-// CORS configuration - Updated to include your production domain
+// CORS configuration
+const envOrigins = (process.env.FRONTEND_URLS || process.env.FRONTEND_URL || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "https://www.mindymunchs.com",
+  "https://mindymunchs.com",
+  ...envOrigins,
+];
+
 const corsOptions = {
-  origin: [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "https://www.mindymunchs.com",
-    "https://mindymunchs.com",
-    process.env.FRONTEND_URL,
-  ],
+  origin: (origin, callback) => {
+    // Allow server-to-server tools or same-origin requests without Origin header.
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
   credentials: true, // Important for OAuth cookies
   optionsSuccessStatus: 200,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -218,7 +234,7 @@ app.listen(PORT, () => {
   console.log(`📍 Environment: ${process.env.NODE_ENV || "development"}`);
   console.log(`📧 Email Service: ${process.env.BREVO_API_KEY ? 'Brevo API (Production Ready)' : '⚠️ No Brevo API key - add BREVO_API_KEY to .env'}`);
   console.log(`🔐 Google OAuth: ${process.env.GOOGLE_CLIENT_ID ? 'Configured ✓' : '⚠️ Not configured - add Google credentials to .env'}`);
-  console.log(`🌐 CORS Origins: ${corsOptions.origin.join(', ')}`);
+  console.log(`🌐 CORS Origins: ${allowedOrigins.join(', ')}`);
 });
 
 module.exports = app;
