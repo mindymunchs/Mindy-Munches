@@ -139,7 +139,9 @@ const corsOptions = {
       return callback(null, true);
     }
 
-    return callback(new Error(`CORS blocked for origin: ${origin}`));
+    // Do not throw for unknown origins; just omit CORS headers.
+    // Throwing here can make health checks fail with 500 responses.
+    return callback(null, false);
   },
   credentials: true, // Important for OAuth cookies
   optionsSuccessStatus: 200,
