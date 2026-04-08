@@ -9,11 +9,12 @@ const TestimonialManagement = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [generatingThumbnail, setGeneratingThumbnail] = useState(false);
+  const [saving, setSaving] = useState(false);
   const videoPreviewRef = useRef(null);
 
   const [formData, setFormData] = useState({
     name: "",
-    message: "",
+    quote: "", // ✅ Changed from 'message' to match backend
     rating: 5,
     location: "",
     title: "",
@@ -34,7 +35,6 @@ const TestimonialManagement = () => {
       video.preload = "metadata";
 
       video.addEventListener("loadedmetadata", () => {
-        // Seek to 2 seconds (or 10% of video)
         video.currentTime = Math.min(2, video.duration * 0.1);
       });
 
@@ -56,14 +56,13 @@ const TestimonialManagement = () => {
         }
       });
 
-      video.addEventListener("error", (e) => {
+      video.addEventListener("error", () => {
         setGeneratingThumbnail(false);
         reject(new Error("Failed to load video"));
       });
     });
   };
 
-  // Handle video URL input and auto-generate thumbnail
   const handleVideoUrlChange = async (url) => {
     setFormData({ ...formData, videoSrc: url });
 
@@ -73,7 +72,6 @@ const TestimonialManagement = () => {
         setFormData((prev) => ({ ...prev, thumbnail, videoSrc: url }));
       } catch (error) {
         console.error("Error generating thumbnail:", error);
-        alert("Could not generate thumbnail. Please check the video URL.");
       }
     }
   };
@@ -83,6 +81,7 @@ const TestimonialManagement = () => {
     fetchVideoTestimonials();
   }, []);
 
+  // ✅ FIXED: Proper response handling for text testimonials
   const fetchTestimonials = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -94,17 +93,31 @@ const TestimonialManagement = () => {
           },
         }
       );
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch testimonials');
+      }
+
       const data = await response.json();
-      if (data.success) {
+      console.log('✅ Text testimonials fetched:', data);
+      
+      // ✅ Handle both array and object responses
+      if (Array.isArray(data)) {
+        setTestimonials(data);
+      } else if (data.testimonials) {
         setTestimonials(data.testimonials);
+      } else {
+        setTestimonials([]);
       }
     } catch (error) {
-      console.error("Error fetching testimonials:", error);
+      console.error("❌ Error fetching testimonials:", error);
+      setTestimonials([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // ✅ FIXED: Proper response handling for video testimonials
   const fetchVideoTestimonials = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -116,15 +129,33 @@ const TestimonialManagement = () => {
           },
         }
       );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch video testimonials');
+      }
+
       const data = await response.json();
-      setVideoTestimonials(data);
+      console.log('✅ Video testimonials fetched:', data);
+      
+      // ✅ Handle both array and object responses
+      if (Array.isArray(data)) {
+        setVideoTestimonials(data);
+      } else if (data.videoTestimonials) {
+        setVideoTestimonials(data.videoTestimonials);
+      } else {
+        setVideoTestimonials([]);
+      }
     } catch (error) {
-      console.error("Error fetching video testimonials:", error);
+      console.error("❌ Error fetching video testimonials:", error);
+      setVideoTestimonials([]);
     }
   };
 
+  // ✅ FIXED: Proper request body and response handling
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSaving(true);
+    
     const token = localStorage.getItem("token");
     const isVideo = activeTab === "video";
     const endpoint = isVideo ? "video-testimonials" : "testimonials";
@@ -134,36 +165,71 @@ const TestimonialManagement = () => {
       : `${import.meta.env.VITE_API_URL}/admin/${endpoint}`;
 
     try {
+      // ✅ Prepare correct data based on type
+      let requestBody;
+      
+      if (isVideo) {
+        // ✅ Remove MongoDB internal fields
+        const { _id, createdAt, updatedAt, __v, ...cleanData } = formData;
+        requestBody = cleanData;
+      } else {
+        // ✅ Text testimonial - ensure 'quote' field exists
+        requestBody = {
+          name: formData.name,
+          quote: formData.quote,
+          rating: formData.rating,
+          location: formData.location || ''
+        };
+      }
+
+      console.log('📤 Submitting:', method, url);
+      console.log('📦 Data:', requestBody);
+
       const response = await fetch(url, {
         method,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(requestBody),
       });
 
-      const data = await response.json();
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to save');
+      }
 
-      if (data.success) {
-        alert(editingItem ? "Updated successfully!" : "Created successfully!");
-        setShowModal(false);
-        resetForm();
-        isVideo ? fetchVideoTestimonials() : fetchTestimonials();
+      const data = await response.json();
+      console.log('✅ Save response:', data);
+
+      alert(editingItem ? "Updated successfully!" : "Created successfully!");
+      setShowModal(false);
+      resetForm();
+      
+      // ✅ Refresh the appropriate list
+      if (isVideo) {
+        await fetchVideoTestimonials();
+      } else {
+        await fetchTestimonials();
       }
     } catch (error) {
-      console.error("Error saving testimonial:", error);
-      alert("Failed to save testimonial");
+      console.error("❌ Error saving testimonial:", error);
+      alert("Failed to save: " + error.message);
+    } finally {
+      setSaving(false);
     }
   };
 
+  // ✅ FIXED: Proper delete handling
   const handleDelete = async (id, isVideo) => {
-    if (!confirm("Are you sure you want to delete this testimonial?")) return;
+    if (!window.confirm("Are you sure you want to delete this testimonial?")) return;
 
     const token = localStorage.getItem("token");
     const endpoint = isVideo ? "video-testimonials" : "testimonials";
 
     try {
+      console.log('🗑️ Deleting:', id);
+      
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/admin/${endpoint}/${id}`,
         {
@@ -174,21 +240,58 @@ const TestimonialManagement = () => {
         }
       );
 
-      const data = await response.json();
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete');
+      }
 
-      if (data.success) {
-        alert("Deleted successfully!");
-        isVideo ? fetchVideoTestimonials() : fetchTestimonials();
+      console.log('✅ Deleted successfully');
+      alert("Deleted successfully!");
+      
+      // ✅ Refresh the appropriate list
+      if (isVideo) {
+        await fetchVideoTestimonials();
+      } else {
+        await fetchTestimonials();
       }
     } catch (error) {
-      console.error("Error deleting testimonial:", error);
-      alert("Failed to delete testimonial");
+      console.error("❌ Error deleting testimonial:", error);
+      alert("Failed to delete: " + error.message);
     }
   };
 
+  // ✅ FIXED: Proper edit data loading
   const handleEdit = (item, isVideo) => {
+    console.log('✏️ Editing:', item);
     setEditingItem(item);
-    setFormData(item);
+    
+    if (isVideo) {
+      setFormData({
+        name: item.name || "",
+        location: item.location || "",
+        title: item.title || "",
+        videoSrc: item.videoSrc || "",
+        thumbnail: item.thumbnail || "",
+        fullQuote: item.fullQuote || "",
+        duration: item.duration || "",
+        rating: item.rating || 5,
+        quote: "" // Not used for video
+      });
+    } else {
+      setFormData({
+        name: item.name || "",
+        quote: item.quote || item.message || "", // ✅ Handle both field names
+        rating: item.rating || 5,
+        location: item.location || "",
+        // Reset video fields
+        title: "",
+        videoSrc: "",
+        thumbnail: "",
+        fullQuote: "",
+        duration: ""
+      });
+    }
+    
     setActiveTab(isVideo ? "video" : "text");
     setShowModal(true);
   };
@@ -196,7 +299,7 @@ const TestimonialManagement = () => {
   const resetForm = () => {
     setFormData({
       name: "",
-      message: "",
+      quote: "",
       rating: 5,
       location: "",
       title: "",
@@ -258,112 +361,122 @@ const TestimonialManagement = () => {
 
       {activeTab === "text" ? (
         <div className="grid gap-4">
-          {testimonials.map((item) => (
-            <motion.div
-              key={item._id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition"
-            >
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold text-gray-900">
-                    {item.name}
-                  </h3>
-                  <div className="flex items-center gap-1 my-2">
-                    {[...Array(item.rating)].map((_, i) => (
-                      <span key={i} className="text-yellow-400">
-                        ⭐
-                      </span>
-                    ))}
+          {testimonials.length > 0 ? (
+            testimonials.map((item) => (
+              <motion.div
+                key={item._id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition"
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-gray-900">
+                      {item.name}
+                    </h3>
+                    <div className="flex items-center gap-1 my-2">
+                      {[...Array(item.rating || 5)].map((_, i) => (
+                        <span key={i} className="text-yellow-400">⭐</span>
+                      ))}
+                    </div>
+                    <p className="text-gray-600 italic">"{item.quote || item.message}"</p>
+                    {item.location && (
+                      <p className="text-sm text-gray-500 mt-1">{item.location}</p>
+                    )}
+                    <p className="text-sm text-gray-400 mt-2">
+                      {new Date(item.createdAt).toLocaleDateString()}
+                    </p>
                   </div>
-                  <p className="text-gray-600 italic">"{item.message}"</p>
-                  <p className="text-sm text-gray-400 mt-2">
-                    {new Date(item.createdAt).toLocaleDateString()}
-                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEdit(item, false)}
+                      className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item._id, false)}
+                      className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEdit(item, false)}
-                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(item._id, false)}
-                    className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            ))
+          ) : (
+            <div className="text-center py-12 text-gray-500">
+              No text testimonials yet. Click "Add New" to create one.
+            </div>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {videoTestimonials.map((item) => (
-            <motion.div
-              key={item._id}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition"
-            >
-              {/* ✅ Show thumbnail or video preview */}
-              {item.thumbnail ? (
-                <img
-                  src={item.thumbnail}
-                  alt={item.name}
-                  className="w-full h-48 object-cover"
-                  onError={(e) => {
-                    // Fallback: Show video element if image fails
-                    e.target.style.display = "none";
-                    e.target.nextSibling.style.display = "block";
-                  }}
+          {videoTestimonials.length > 0 ? (
+            videoTestimonials.map((item) => (
+              <motion.div
+                key={item._id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition"
+              >
+                {item.thumbnail ? (
+                  <img
+                    src={item.thumbnail}
+                    alt={item.name}
+                    className="w-full h-48 object-cover"
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                      if (e.target.nextSibling) e.target.nextSibling.style.display = "block";
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
+                    <span className="text-gray-500">🎥 No thumbnail</span>
+                  </div>
+                )}
+                <video
+                  src={item.videoSrc}
+                  className="w-full h-48 object-cover hidden"
+                  preload="metadata"
                 />
-              ) : (
-                <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
-                  <span className="text-gray-500">🎥 No thumbnail</span>
-                </div>
-              )}
-              {/* Hidden video fallback */}
-              <video
-                src={item.videoSrc}
-                className="w-full h-48 object-cover hidden"
-                preload="metadata"
-              />
 
-              <div className="p-4">
-                <h3 className="text-lg font-bold text-gray-900">{item.name}</h3>
-                <p className="text-sm text-gray-600">{item.location}</p>
-                <p className="text-sm text-gray-500 mt-2">{item.title}</p>
-                <div className="flex items-center gap-1 my-2">
-                  {[...Array(item.rating)].map((_, i) => (
-                    <span key={i} className="text-yellow-400 text-sm">
-                      ⭐
-                    </span>
-                  ))}
+                <div className="p-4">
+                  <h3 className="text-lg font-bold text-gray-900">{item.name}</h3>
+                  <p className="text-sm text-gray-600">{item.location}</p>
+                  {item.title && <p className="text-sm text-gray-500 mt-2">{item.title}</p>}
+                  <div className="flex items-center gap-1 my-2">
+                    {[...Array(item.rating || 5)].map((_, i) => (
+                      <span key={i} className="text-yellow-400 text-sm">⭐</span>
+                    ))}
+                  </div>
+                  {item.fullQuote && (
+                    <p className="text-sm text-gray-600 italic line-clamp-2">
+                      "{item.fullQuote}"
+                    </p>
+                  )}
+                  <div className="flex gap-2 mt-4">
+                    <button
+                      onClick={() => handleEdit(item, true)}
+                      className="flex-1 px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 transition"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item._id, true)}
+                      className="flex-1 px-3 py-2 bg-red-500 text-white rounded text-sm hover:bg-red-600 transition"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
-                <p className="text-sm text-gray-600 italic line-clamp-2">
-                  "{item.fullQuote}"
-                </p>
-                <div className="flex gap-2 mt-4">
-                  <button
-                    onClick={() => handleEdit(item, true)}
-                    className="flex-1 px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 transition"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(item._id, true)}
-                    className="flex-1 px-3 py-2 bg-red-500 text-white rounded text-sm hover:bg-red-600 transition"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            ))
+          ) : (
+            <div className="col-span-full text-center py-12 text-gray-500">
+              No video testimonials yet. Click "Add New" to create one.
+            </div>
+          )}
         </div>
       )}
 
@@ -395,14 +508,27 @@ const TestimonialManagement = () => {
                   <>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Message *
+                        Quote *
                       </label>
                       <textarea
                         required
                         rows="4"
-                        value={formData.message}
+                        value={formData.quote}
                         onChange={(e) =>
-                          setFormData({ ...formData, message: e.target.value })
+                          setFormData({ ...formData, quote: e.target.value })
+                        }
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Location
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.location}
+                        onChange={(e) =>
+                          setFormData({ ...formData, location: e.target.value })
                         }
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       />
@@ -478,7 +604,6 @@ const TestimonialManagement = () => {
                       />
                     </div>
 
-                    {/* ✅ Show generated thumbnail preview */}
                     {formData.thumbnail && (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -548,10 +673,12 @@ const TestimonialManagement = () => {
                 <div className="flex gap-3 pt-4">
                   <button
                     type="submit"
-                    disabled={generatingThumbnail}
+                    disabled={generatingThumbnail || saving}
                     className="flex-1 bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {generatingThumbnail
+                    {saving
+                      ? "Saving..."
+                      : generatingThumbnail
                       ? "Generating..."
                       : editingItem
                       ? "Update"
@@ -563,7 +690,8 @@ const TestimonialManagement = () => {
                       setShowModal(false);
                       resetForm();
                     }}
-                    className="flex-1 bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400 transition font-medium"
+                    disabled={saving}
+                    className="flex-1 bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400 transition font-medium disabled:opacity-50"
                   >
                     Cancel
                   </button>

@@ -30,6 +30,7 @@ const videoTestimonialRoutes = require("./routes/videoTestimonials");
 const newsletterRoutes = require("./routes/newsLetter");
 const paymentRoutes = require("./routes/paymentRoutes");
 const feedbackRoutes = require("./routes/feedback");
+const webhookRoutes = require("./routes/webhooks");
 
 const app = express();
 
@@ -178,6 +179,7 @@ app.use("/api", videoTestimonialRoutes);
 app.use("/api/newsletter", newsletterRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/feedback", feedbackRoutes);
+app.use("/api/webhooks", webhookRoutes);
 
 
 // Enhanced health check endpoint
