@@ -5,23 +5,27 @@ const FeedbackManagement = () => {
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState("");
   const [error, setError] = useState("");
+  const [configQuestions, setConfigQuestions] = useState([]);
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("token");
+    return {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    };
+  };
 
   const fetchFeedback = async () => {
     setLoading(true);
     setError("");
     try {
-      const token = localStorage.getItem("token");
       const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/feedback`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: getAuthHeaders(),
       });
-
       const data = await response.json();
       if (!response.ok || !data.success) {
         throw new Error(data.message || "Failed to load feedback");
       }
-
       setEntries(Array.isArray(data.data) ? data.data : []);
     } catch (err) {
       setError(err.message || "Could not fetch feedback.");
@@ -30,8 +34,25 @@ const FeedbackManagement = () => {
     }
   };
 
+  const fetchConfig = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/feedback/config`, {
+        headers: getAuthHeaders(),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Failed to load feedback form config");
+      }
+      const questions = Array.isArray(data.data?.questions) ? data.data.questions : [];
+      setConfigQuestions(questions);
+    } catch (_) {
+      setConfigQuestions([]);
+    }
+  };
+
   useEffect(() => {
     fetchFeedback();
+    fetchConfig();
   }, []);
 
   const formattedRows = useMemo(() => {
@@ -39,14 +60,24 @@ const FeedbackManagement = () => {
       id: item._id,
       submittedAt: new Date(item.createdAt).toLocaleString("en-IN"),
       name: item.name || "",
-      email: item.email || "",
-      q1ChoiceOverChai: item.q1ChoiceOverChai || "",
-      q2DailyFixedTime: item.q2DailyFixedTime || "",
-      q3TryPack4050: item.q3TryPack4050 || "",
-      q4TasteRating: item.q4TasteRating || "",
+      phone: item.phone || "",
+      answers: Array.isArray(item.answers) ? item.answers : [],
       additionalNotes: item.additionalNotes || "",
     }));
   }, [entries]);
+
+  const questionHeaders = useMemo(() => {
+    const ordered = configQuestions.map((q) => q.questionText).filter(Boolean);
+    const fromAnswers = [];
+    formattedRows.forEach((row) => {
+      row.answers.forEach((answer) => {
+        if (answer.questionText && !ordered.includes(answer.questionText) && !fromAnswers.includes(answer.questionText)) {
+          fromAnswers.push(answer.questionText);
+        }
+      });
+    });
+    return [...ordered, ...fromAnswers];
+  }, [formattedRows, configQuestions]);
 
   const escapeCsv = (value) => {
     const safe = String(value ?? "");
@@ -56,20 +87,20 @@ const FeedbackManagement = () => {
   const handleExportCsv = () => {
     if (!formattedRows.length) return;
 
-    const headers = [
-      "submittedAt",
-      "name",
-      "email",
-      "q1ChoiceOverChai",
-      "q2DailyFixedTime",
-      "q3TryPack4050",
-      "q4TasteRating",
-      "additionalNotes",
-    ];
-
+    const headers = ["submittedAt", "name", "phone", ...questionHeaders, "additionalNotes"];
     const lines = [
       headers.join(","),
-      ...formattedRows.map((row) => headers.map((h) => escapeCsv(row[h])).join(",")),
+      ...formattedRows.map((row) => {
+        const answerMap = new Map(row.answers.map((ans) => [ans.questionText, ans.selectedLabel]));
+        const dynamicValues = questionHeaders.map((questionText) => answerMap.get(questionText) || "");
+        return [
+          escapeCsv(row.submittedAt),
+          escapeCsv(row.name),
+          escapeCsv(row.phone),
+          ...dynamicValues.map(escapeCsv),
+          escapeCsv(row.additionalNotes),
+        ].join(",");
+      }),
     ];
 
     const csv = lines.join("\n");
@@ -90,21 +121,15 @@ const FeedbackManagement = () => {
 
     setDeletingId(id);
     setError("");
-
     try {
-      const token = localStorage.getItem("token");
       const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/feedback/${id}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: getAuthHeaders(),
       });
-
       const data = await response.json();
       if (!response.ok || !data.success) {
         throw new Error(data.message || "Failed to delete feedback");
       }
-
       setEntries((prev) => prev.filter((entry) => entry._id !== id));
     } catch (err) {
       setError(err.message || "Could not delete feedback.");
@@ -159,37 +184,42 @@ const FeedbackManagement = () => {
               <tr>
                 <th className="px-4 py-3 text-left font-semibold text-gray-700">Submitted</th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-700">Name</th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">Email</th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">Q1</th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">Q2</th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">Q3</th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">Q4</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-700">Phone</th>
+                {questionHeaders.map((header) => (
+                  <th key={header} className="px-4 py-3 text-left font-semibold text-gray-700">
+                    {header}
+                  </th>
+                ))}
                 <th className="px-4 py-3 text-left font-semibold text-gray-700">Notes</th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-700">Action</th>
               </tr>
             </thead>
             <tbody>
-              {formattedRows.map((item, idx) => (
-                <tr key={`${item.submittedAt}-${idx}`} className="border-t border-gray-100">
-                  <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{item.submittedAt}</td>
-                  <td className="px-4 py-3 text-gray-700">{item.name || "-"}</td>
-                  <td className="px-4 py-3 text-gray-700">{item.email || "-"}</td>
-                  <td className="px-4 py-3 text-gray-700">{item.q1ChoiceOverChai}</td>
-                  <td className="px-4 py-3 text-gray-700">{item.q2DailyFixedTime}</td>
-                  <td className="px-4 py-3 text-gray-700">{item.q3TryPack4050}</td>
-                  <td className="px-4 py-3 text-gray-700">{item.q4TasteRating}</td>
-                  <td className="px-4 py-3 text-gray-700 max-w-xs">{item.additionalNotes || "-"}</td>
-                  <td className="px-4 py-3">
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      disabled={deletingId === item.id}
-                      className="px-3 py-1.5 rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {deletingId === item.id ? "Deleting..." : "Delete"}
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {formattedRows.map((item, idx) => {
+                const answerMap = new Map(item.answers.map((answer) => [answer.questionText, answer.selectedLabel]));
+                return (
+                  <tr key={`${item.submittedAt}-${idx}`} className="border-t border-gray-100">
+                    <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{item.submittedAt}</td>
+                    <td className="px-4 py-3 text-gray-700">{item.name || "-"}</td>
+                    <td className="px-4 py-3 text-gray-700">{item.phone || "-"}</td>
+                    {questionHeaders.map((header) => (
+                      <td key={`${item.id}-${header}`} className="px-4 py-3 text-gray-700">
+                        {answerMap.get(header) || "-"}
+                      </td>
+                    ))}
+                    <td className="px-4 py-3 text-gray-700 max-w-xs">{item.additionalNotes || "-"}</td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        disabled={deletingId === item.id}
+                        className="px-3 py-1.5 rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {deletingId === item.id ? "Deleting..." : "Delete"}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

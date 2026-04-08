@@ -17,7 +17,12 @@ const {
   updateVideoTestimonial,
   deleteVideoTestimonial
 } = require('../controllers/videoTestimonialController');
-const { getAllFeedbackForAdmin, deleteFeedbackForAdmin } = require('../controllers/feedbackController');
+const {
+  getAllFeedbackForAdmin,
+  deleteFeedbackForAdmin,
+  getFeedbackFormConfig,
+  updateFeedbackFormConfigForAdmin,
+} = require('../controllers/feedbackController');
 
 // Protect all routes
 router.use(authenticate);
@@ -50,5 +55,7 @@ router.delete('/video-testimonials/:id', deleteVideoTestimonial);
 // Feedback routes
 router.get('/feedback', getAllFeedbackForAdmin);
 router.delete('/feedback/:id', deleteFeedbackForAdmin);
+router.get('/feedback/config', getFeedbackFormConfig);
+router.put('/feedback/config', updateFeedbackFormConfigForAdmin);
 
 module.exports = router;
