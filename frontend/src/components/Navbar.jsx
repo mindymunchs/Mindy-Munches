@@ -75,7 +75,7 @@ const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <div className="ml-3 w-18 h-18 rounded-lg flex items-center justify-center">
-              <img src="/Mindy Munchs_Logo-01.png" alt="Mindy Munchs" />
+              <img src="/mindy-munchs-logo.png" alt="Mindy Munchs" />
             </div>
           </Link>
 
@@ -294,7 +294,7 @@ const Navbar = () => {
                   >
                     <div className="w-10 h-10 rounded-lg flex items-center justify-center">
                       <img
-                        src="/Mindy Munchs_Logo-01.png"
+                        src="/mindy-munchs-logo.png"
                         alt="Mindy Munchs"
                         className="h-8"
                       />

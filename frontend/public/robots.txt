@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin
+Disallow: /admin/
+Disallow: /checkout
+Disallow: /dashboard
+Disallow: /payment-test
+
+Sitemap: https://mindymunchs.com/sitemap.xml

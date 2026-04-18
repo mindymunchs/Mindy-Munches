@@ -5,12 +5,11 @@ import { useEffect } from "react";
 import useAuthStore from "./store/authStore";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
-// Console override for production
+// Suppress verbose logs in production; keep warn/error for SDK and React warnings
 if (process.env.NODE_ENV === 'production') {
   console.log = () => {};
   console.debug = () => {};
   console.info = () => {};
-  console.warn = () => {};
 }
 
 import Navbar from "./components/Navbar";
@@ -41,9 +40,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ContactUs from "./pages/ContactUs";
 import ShippingPolicy from "./pages/ShippingPolicy";
 import Connect from "./pages/Connect";
-
-// ✅ NEW: Import TestimonialManagement component
-import TestimonialManagement from "./components/admin/TestimonialManagement";
+import NotFound from "./pages/NotFound";
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -199,24 +196,6 @@ function App() {
                 }
               />
 
-              {/* ✅ NEW: Testimonials Management Route */}
-              <Route
-                path="/admin/testimonials"
-                element={
-                  <ProtectedRoute adminOnly>
-                    <motion.div
-                      initial="initial"
-                      animate="in"
-                      exit="out"
-                      variants={pageVariants}
-                      transition={pageTransition}
-                    >
-                      <TestimonialManagement />
-                    </motion.div>
-                  </ProtectedRoute>
-                }
-              />
-
               <Route
                 path="/admin/invite"
                 element={
@@ -236,15 +215,17 @@ function App() {
               <Route
                 path="/payment-test"
                 element={
-                  <motion.div
-                    initial="initial"
-                    animate="in"
-                    exit="out"
-                    variants={pageVariants}
-                    transition={pageTransition}
-                  >
-                    <PaymentTest />
-                  </motion.div>
+                  <ProtectedRoute adminOnly>
+                    <motion.div
+                      initial="initial"
+                      animate="in"
+                      exit="out"
+                      variants={pageVariants}
+                      transition={pageTransition}
+                    >
+                      <PaymentTest />
+                    </motion.div>
+                  </ProtectedRoute>
                 }
               />
 
@@ -403,6 +384,7 @@ function App() {
                   </motion.div>
                 }
               />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </AnimatePresence>
         </main>

@@ -12,12 +12,18 @@ require("dotenv").config();
 // Import User model for Google OAuth
 const User = require("./models/User");
 
-// Console override for production
+// Suppress verbose logs in production; keep error active
 if (process.env.NODE_ENV === 'production') {
   console.log = () => {};
   console.debug = () => {};
   console.info = () => {};
   console.warn = () => {};
+}
+
+// Guard: SESSION_SECRET must be set in production
+if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
+  console.error('FATAL: SESSION_SECRET must be set in production');
+  process.exit(1);
 }
 
 const authRoutes = require("./routes/auth");
@@ -30,7 +36,7 @@ const videoTestimonialRoutes = require("./routes/videoTestimonials");
 const newsletterRoutes = require("./routes/newsLetter");
 const paymentRoutes = require("./routes/paymentRoutes");
 const feedbackRoutes = require("./routes/feedback");
-const webhookRoutes = require("./routes/webhooks");
+const promoCodeRoutes = require("./routes/promoCodes");
 
 const app = express();
 
@@ -64,55 +70,58 @@ passport.deserializeUser(async (id, done) => {
   }
 });
 
-// Google OAuth Strategy
-passport.use(new GoogleStrategy({
-  clientID: process.env.GOOGLE_CLIENT_ID,
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: "/api/auth/google/callback"
-}, async (accessToken, refreshToken, profile, done) => {
-  try {
-    console.log('Google OAuth callback triggered for:', profile.emails[0].value);
-    
-    // Check if user already exists with this Google ID
-    let existingUser = await User.findOne({ googleId: profile.id });
-    
-    if (existingUser) {
-      console.log('Found existing user with Google ID');
-      return done(null, existingUser);
+// Google OAuth Strategy (optional in environments where credentials are not set)
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: "/api/auth/google/callback"
+  }, async (accessToken, refreshToken, profile, done) => {
+    const isDev = process.env.NODE_ENV !== 'production';
+    try {
+      if (isDev) console.log('Google OAuth callback triggered for:', profile.emails[0].value);
+
+      let existingUser = await User.findOne({ googleId: profile.id });
+
+      if (existingUser) {
+        if (isDev) console.log('Found existing user with Google ID');
+        return done(null, existingUser);
+      }
+
+      existingUser = await User.findOne({ email: profile.emails[0].value });
+
+      if (existingUser) {
+        if (isDev) console.log('Linking Google account to existing user');
+        existingUser.googleId = profile.id;
+        existingUser.authProvider = 'google';
+        existingUser.profilePicture = profile.photos[0]?.value;
+        await existingUser.save();
+        return done(null, existingUser);
+      }
+
+      if (isDev) console.log('Creating new user from Google profile');
+      const newUser = new User({
+        googleId: profile.id,
+        name: profile.displayName,
+        email: profile.emails[0].value,
+        profilePicture: profile.photos[0]?.value,
+        authProvider: 'google',
+        isVerified: true,
+      });
+
+      const savedUser = await newUser.save();
+      if (isDev) console.log('New user created successfully');
+      done(null, savedUser);
+    } catch (error) {
+      console.error('Google OAuth error:', error);
+      done(error, null);
     }
-
-    // Check if user exists with same email
-    existingUser = await User.findOne({ email: profile.emails[0].value });
-    
-    if (existingUser) {
-      // Link Google account to existing user
-      console.log('Linking Google account to existing user');
-      existingUser.googleId = profile.id;
-      existingUser.authProvider = 'google';
-      existingUser.profilePicture = profile.photos[0]?.value;
-      await existingUser.save();
-      return done(null, existingUser);
-    }
-
-    // Create new user
-    console.log('Creating new user from Google profile');
-    const newUser = new User({
-      googleId: profile.id,
-      name: profile.displayName,
-      email: profile.emails[0].value,
-      profilePicture: profile.photos[0]?.value,
-      authProvider: 'google',
-      isVerified: true, // Google accounts are pre-verified
-    });
-
-    const savedUser = await newUser.save();
-    console.log('New user created successfully');
-    done(null, savedUser);
-  } catch (error) {
-    console.error('Google OAuth error:', error);
-    done(error, null);
+  }));
+} else {
+  if (process.env.NODE_ENV !== 'production') {
+    console.warn("Google OAuth credentials not set. Skipping GoogleStrategy initialization.");
   }
-}));
+}
 
 // CORS configuration
 const envOrigins = (process.env.FRONTEND_URLS || process.env.FRONTEND_URL || "")
@@ -157,13 +166,20 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" } // Allow cross-origin requests
 }));
 
-// Rate limiting
+// Rate limiting — global
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: "Too many requests from this IP, please try again later.",
 });
 app.use(limiter);
+
+// Stricter rate limit for auth endpoints (brute-force protection)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: "Too many authentication attempts. Please try again later.",
+});
 
 // Body parsing middleware
 app.use(express.json({ limit: "10mb" }));
@@ -187,7 +203,7 @@ mongoose
   .catch((err) => console.error("MongoDB connection error:", err));
 
 // Routes
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
@@ -197,17 +213,12 @@ app.use("/api", videoTestimonialRoutes);
 app.use("/api/newsletter", newsletterRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/feedback", feedbackRoutes);
-app.use("/api/webhooks", webhookRoutes);
+app.use("/api/promo-codes", promoCodeRoutes);
 
-
-// Enhanced health check endpoint
+// Health check endpoint
 app.get("/api/health", (req, res) => {
   res.json({
-    status: "OK",
-    message: "Mindy Munchs API is running",
-    emailService: process.env.BREVO_API_KEY ? 'Brevo API (Production Ready)' : 'No email service configured',
-    googleOAuth: process.env.GOOGLE_CLIENT_ID ? 'Configured' : 'Not configured',
-    corsOrigins: corsOptions.origin,
+    status: "ok",
     timestamp: new Date().toISOString(),
   });
 });
@@ -232,11 +243,33 @@ app.use("*", (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📍 Environment: ${process.env.NODE_ENV || "development"}`);
-  console.log(`📧 Email Service: ${process.env.BREVO_API_KEY ? 'Brevo API (Production Ready)' : '⚠️ No Brevo API key - add BREVO_API_KEY to .env'}`);
-  console.log(`🔐 Google OAuth: ${process.env.GOOGLE_CLIENT_ID ? 'Configured ✓' : '⚠️ Not configured - add Google credentials to .env'}`);
-  console.log(`🌐 CORS Origins: ${allowedOrigins.join(', ')}`);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+  }
+
+  // Self-ping every 14 minutes to prevent Render cold starts
+  if (process.env.BACKEND_URL) {
+    const https = require("https");
+    const http = require("http");
+    const pingUrl = `${process.env.BACKEND_URL}/api/health`;
+    const client = pingUrl.startsWith("https") ? https : http;
+
+    setInterval(() => {
+      try {
+        client.get(pingUrl, (res) => {
+          if (process.env.NODE_ENV !== 'production') {
+            console.log(`[health-ping] ok — status ${res.statusCode}`);
+          }
+          res.resume();
+        }).on("error", (err) => {
+          console.error("[health-ping] failed:", err.message);
+        });
+      } catch (err) {
+        console.error("[health-ping] error:", err.message);
+      }
+    }, 14 * 60 * 1000);
+  }
 });
 
 module.exports = app;

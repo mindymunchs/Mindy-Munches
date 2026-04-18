@@ -40,36 +40,38 @@ const orderSchema = new mongoose.Schema({
   },
   paymentStatus: {
     type: String,
-    enum: ['pending', 'paid', 'failed', 'refunded'],
+    enum: ['pending', 'paid', 'failed'],
     default: 'pending'
+  },
+  razorpayOrderId: String,
+  razorpayPaymentId: { type: String, unique: true, sparse: true },
+  razorpaySignature: String,
+  subtotal: {
+    type: Number,
+    required: true
+  },
+  shippingCost: {
+    type: Number,
+    default: 0
+  },
+  // ✅ NEW: Promo Code fields
+  promoCode: {
+    code: String,
+    discount: Number
+  },
+  totalAmount: {
+    type: Number,
+    required: true
   },
   orderStatus: {
     type: String,
-    enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'],
+    enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
     default: 'pending'
   },
-  // Razorpay fields
-  razorpayOrderId: String,
-  razorpayPaymentId: String,
-  razorpaySignature: String,
-  
-  subtotal: { type: Number, required: true },
-  shippingCost: { type: Number, default: 0 },
-  discount: { type: Number, default: 0 },
-  totalAmount: { type: Number, required: true },
-  estimatedDelivery: Date,
   trackingNumber: String,
-  notes: { type: String, maxlength: 500 }
+  trackingUrl: String,
+  courierName: String,
+  deliveredAt: Date
 }, { timestamps: true });
-
-// Generate order number before saving
-orderSchema.pre('save', function(next) {
-  if (!this.orderNumber) {
-    const timestamp = Date.now().toString();
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    this.orderNumber = `MM${timestamp.slice(-6)}${random}`;
-  }
-  next();
-});
 
 module.exports = mongoose.model('Order', orderSchema);

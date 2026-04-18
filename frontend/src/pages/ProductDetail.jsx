@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
+import { setSEO } from "../utils/seo";
 import { motion, AnimatePresence } from "framer-motion";
 import useCartStore from "../store/cartStore";
 import useAuthStore from "../store/authStore";
@@ -60,7 +61,7 @@ const ImageZoom = ({ src, alt }) => {
 };
 
 const ProductDetail = () => {
-  const { id } = useParams();
+  const { slug } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const [product, setProduct] = useState(null);
@@ -114,7 +115,7 @@ const ProductDetail = () => {
           if (import.meta.env.VITE_API_URL && !isNetlify()) {
             console.log("Attempting to fetch from API...");
             response = await fetch(
-              `${import.meta.env.VITE_API_URL}/products/${id}`,
+              `${import.meta.env.VITE_API_URL}/products/${slug}`,
               {
                 headers: { Accept: "application/json" },
               }
@@ -178,7 +179,7 @@ const ProductDetail = () => {
             if (response.ok) {
               const data = await response.json();
               products = data.products || data;
-              product = products.find((p) => p.id === parseInt(id));
+              product = products.find((p) => p.slug === slug);
               console.log("Product fetched from products.json:", product);
             } else {
               throw new Error("products.json file not found");
@@ -191,12 +192,16 @@ const ProductDetail = () => {
 
         // Product not found
         if (!product) {
-          console.error(`Product with ID ${id} not found`);
+          console.error(`Product with ID ${slug} not found`);
           navigate("/products");
           return;
         }
 
         setProduct(product);
+        setSEO({
+          title: product.name,
+          description: product.description?.slice(0, 155) || 'Premium Mindy Munchs product',
+        });
 
         // Related products logic
         let related = [];
@@ -217,7 +222,7 @@ const ProductDetail = () => {
     };
 
     loadProduct();
-  }, [id, navigate]);
+  }, [slug, navigate]);
 
   // Enhanced image handling with proper URL resolution
   const productImages = useMemo(() => {
@@ -1097,11 +1102,13 @@ const ProductDetail = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {relatedProducts.map((relatedProduct, index) => (
-                <ProductCard
-                  key={relatedProduct.id}
-                  product={relatedProduct}
-                  index={index}
-                />
+                <Link to={`/products/${relatedProduct.slug}`}>
+                  <ProductCard
+                    key={relatedProduct._id}
+                    product={relatedProduct}
+                    index={index}
+                  />
+                </Link>
               ))}
             </div>
           </div>

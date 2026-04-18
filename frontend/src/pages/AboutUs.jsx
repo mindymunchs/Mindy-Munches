@@ -1,7 +1,15 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
+import { setSEO } from "../utils/seo";
 
 const AboutUs = () => {
+  useEffect(() => {
+    setSEO({
+      title: "About Us",
+      description: "The Mindy Munchs story — bringing India's traditional superfoods to the modern high-performer.",
+    });
+  }, []);
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header Section - Orange-Yellow Gradient Background */}

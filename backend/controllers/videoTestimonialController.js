@@ -1,13 +1,19 @@
 const VideoTestimonial = require('../models/VideoTestimonial');
+const mongoose = require('mongoose');
 
 // GET all video testimonials
 exports.getAllVideoTestimonials = async (req, res) => {
   try {
     const videoTestimonials = await VideoTestimonial.find({}).sort({ createdAt: -1 });
+    console.log('✅ Fetched video testimonials:', videoTestimonials.length);
     res.status(200).json(videoTestimonials);
   } catch (error) {
-    console.error('Error fetching video testimonials from DB:', error);
-    res.status(500).json({ message: 'Failed to fetch video testimonials' });
+    console.error('❌ Error fetching video testimonials:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to fetch video testimonials',
+      error: error.message 
+    });
   }
 };
 
@@ -16,7 +22,9 @@ exports.createVideoTestimonial = async (req, res) => {
   try {
     const { name, location, title, videoSrc, thumbnail, fullQuote, rating, duration } = req.body;
 
-    // Validation - only videoSrc and basic info required
+    console.log('📤 Creating video testimonial:', { name, location });
+
+    // Validation
     if (!name || !location || !videoSrc) {
       return res.status(400).json({
         success: false,
@@ -27,23 +35,24 @@ exports.createVideoTestimonial = async (req, res) => {
     const newVideoTestimonial = new VideoTestimonial({
       name,
       location,
-      title,
+      title: title || '',
       videoSrc,
-      thumbnail: thumbnail || '', // ✅ Use provided thumbnail or empty string
-      fullQuote,
+      thumbnail: thumbnail || '',
+      fullQuote: fullQuote || '',
       rating: rating || 5,
-      duration,
+      duration: duration || ''
     });
 
-    await newVideoTestimonial.save();
+    const savedTestimonial = await newVideoTestimonial.save();
+    console.log('✅ Created video testimonial:', savedTestimonial._id);
 
     res.status(201).json({
       success: true,
       message: 'Video testimonial created successfully',
-      testimonial: newVideoTestimonial,
+      data: savedTestimonial,
     });
   } catch (error) {
-    console.error('Error creating video testimonial:', error);
+    console.error('❌ Error creating video testimonial:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to create video testimonial',
@@ -52,32 +61,68 @@ exports.createVideoTestimonial = async (req, res) => {
   }
 };
 
-// UPDATE - Edit video testimonial
+// UPDATE - Edit existing video testimonial
 exports.updateVideoTestimonial = async (req, res) => {
   try {
     const { id } = req.params;
-    const updateData = req.body;
+    
+    console.log('🔄 Update request received');
+    console.log('   ID:', id);
+    console.log('   Body:', req.body);
 
-    const updatedTestimonial = await VideoTestimonial.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedTestimonial) {
-      return res.status(404).json({
+    // ✅ Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      console.log('❌ Invalid ObjectId format');
+      return res.status(400).json({
         success: false,
-        message: 'Video testimonial not found',
+        message: 'Invalid testimonial ID format',
       });
     }
 
-    res.json({
+    // ✅ Remove MongoDB internal fields from update
+    const { _id, createdAt, updatedAt, __v, ...updateData } = req.body;
+
+    console.log('   Clean update data:', updateData);
+
+    // ✅ Use findByIdAndUpdate directly (more reliable)
+    const updatedTestimonial = await VideoTestimonial.findByIdAndUpdate(
+      id,
+      updateData,
+      { 
+        new: true, // Return updated document
+        runValidators: true // Run schema validations
+      }
+    );
+
+    if (!updatedTestimonial) {
+      console.log('❌ Testimonial not found after update attempt');
+      
+      // Double-check if it exists
+      const checkExists = await VideoTestimonial.findById(id);
+      if (!checkExists) {
+        console.log('❌ Confirmed: Document does not exist in DB');
+        return res.status(404).json({
+          success: false,
+          message: 'Video testimonial not found',
+        });
+      } else {
+        console.log('⚠️ Document exists but update failed');
+        return res.status(500).json({
+          success: false,
+          message: 'Update failed for unknown reason',
+        });
+      }
+    }
+
+    console.log('✅ Update successful:', updatedTestimonial._id);
+
+    res.status(200).json({
       success: true,
       message: 'Video testimonial updated successfully',
-      testimonial: updatedTestimonial,
+      data: updatedTestimonial,
     });
   } catch (error) {
-    console.error('Error updating video testimonial:', error);
+    console.error('❌ Error updating video testimonial:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to update video testimonial',
@@ -91,21 +136,35 @@ exports.deleteVideoTestimonial = async (req, res) => {
   try {
     const { id } = req.params;
 
+    console.log('🗑️ Delete request for ID:', id);
+
+    // ✅ Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid testimonial ID format',
+      });
+    }
+
     const deletedTestimonial = await VideoTestimonial.findByIdAndDelete(id);
 
     if (!deletedTestimonial) {
+      console.log('❌ Testimonial not found for deletion');
       return res.status(404).json({
         success: false,
         message: 'Video testimonial not found',
       });
     }
 
-    res.json({
+    console.log('✅ Deleted successfully:', id);
+
+    res.status(200).json({
       success: true,
       message: 'Video testimonial deleted successfully',
+      data: deletedTestimonial,
     });
   } catch (error) {
-    console.error('Error deleting video testimonial:', error);
+    console.error('❌ Error deleting video testimonial:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to delete video testimonial',

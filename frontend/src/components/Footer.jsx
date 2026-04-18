@@ -109,7 +109,7 @@ const Footer = () => {
 
   const footerLinks = {
     company: [
-      { name: "About Us", href: "/aboutus" },
+      { name: "About Us", href: "/about" },
       { name: "Our Story", href: "/story" },
     ],
     products: [
@@ -118,12 +118,12 @@ const Footer = () => {
     ],
     support: [
       { name: "Contact Us", href: "/contact" },
-      { name: "Returns", href: "/returns" },
-      { name: "Shipping", href: "/shipping-policy" },
+      { name: "Returns", href: "/refund" },
+      { name: "Shipping", href: "/shipping" },
     ],
     legal: [
-      { name: "Privacy Policy", href: "/privacy-policy" },
-      { name: "Terms and Conditions", href: "/terms-and-conditions" },
+      { name: "Privacy Policy", href: "/privacy" },
+      { name: "Terms and Conditions", href: "/terms" },
     ],
   };
 
@@ -191,8 +191,7 @@ const Footer = () => {
 
   return (
     <footer
-      className="relative bg-white overflow-hidden min-h-screen"
-      style={{ color: "#1C1E19" }}
+      className="relative bg-white overflow-hidden min-h-screen text-footer-text"
       onClick={handleClickOutside}
     >
       {/* Background Image Container - Bottom Half Only */}
@@ -220,7 +219,7 @@ const Footer = () => {
             <Link to="/" className="flex items-center justify-center space-x-3">
               <div className="w-24 h-24 sm:w-28 sm:h-28 lg:w-35 lg:h-35 rounded-lg flex items-center justify-center">
                 <img
-                  src="/Mindy Munchs_Logo-01.png"
+                  src="/mindy-munchs-logo.png"
                   alt="Mindy Munchs Logo"
                   className="w-full h-full object-contain"
                 />
@@ -231,8 +230,7 @@ const Footer = () => {
             <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
               <span
                 className="font-medium text-sm sm:text-base"
-                style={{ color: "#1C1E19" }}
-              >
+                >
                 Follow us:
               </span>
               <div className="flex gap-3 sm:gap-6">
@@ -244,8 +242,7 @@ const Footer = () => {
                     rel="noopener noreferrer"
                     className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-200 hover:bg-primary-500 rounded-full flex items-center justify-center hover:text-white hover:scale-110 transition-all duration-200"
                     title={social.name}
-                    style={{ color: "#1C1E19" }}
-                  >
+                        >
                     {social.iconSvg}
                   </a>
                 ))}
@@ -258,7 +255,6 @@ const Footer = () => {
           <div className="text-center flex flex-col items-center gap-6 sm:gap-8 lg:gap-10 px-2">
             <p
               className="max-w-xs sm:max-w-sm md:max-w-md text-sm sm:text-base leading-relaxed"
-              style={{ color: "#1C1E19" }}
             >
               Subscribe for special offers, newsletters and become a part of our
               movement towards traditional Indian superfoods
@@ -322,18 +318,17 @@ const Footer = () => {
 
           {/* Right: Location + Available On */}
           <div className="text-center lg:text-right space-y-3 sm:space-y-4">
-            <div className="font-semibold text-sm sm:text-base leading-relaxed" style={{ color: "#1C1E19" }}>
+            <div className="font-semibold text-sm sm:text-base leading-relaxed">
               <div>8/5, SITE-IV, Sahibabad Road,</div>
               <div>Sahibabad Industrial Area,</div>
               <div>Ghaziabad, Uttar Pradesh - 201301</div>
             </div>
-            <div className="text-sm sm:text-base" style={{ color: "#1C1E19" }}>
+            <div className="text-sm sm:text-base">
               <span className="font-medium">For Bulk Order Write Us At: </span>
               <a
                 href="mailto:wecare@mindymunchs.com"
                 className="underline hover:text-primary-600 transition-colors duration-200 break-all"
-                style={{ color: "#1C1E19" }}
-              >
+                >
                 wecare@mindymunchs.com
               </a>
             </div>
@@ -343,8 +338,7 @@ const Footer = () => {
             <div className="flex flex-col sm:flex-row items-center lg:items-center lg:justify-end gap-3 sm:gap-4 mt-18">
               <span
                 className="font-medium text-sm sm:text-base"
-                style={{ color: "#1C1E19" }}
-              >
+                >
                 Available on:
               </span>
 
@@ -365,9 +359,7 @@ const Footer = () => {
                         alt={`${platform.name} logo`}
                         className="w-full h-full object-contain"
                         onError={(e) => {
-                          e.target.src = `https://via.placeholder.com/32/6b7280/ffffff?text=${platform.name.charAt(
-                            0
-                          )}`;
+                          e.target.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%236b7280' rx='4'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-family='Arial' font-size='14' fill='%23ffffff'%3E${platform.name.charAt(0)}%3C/text%3E%3C/svg%3E`;
                         }}
                       />
                     </a>
@@ -382,9 +374,7 @@ const Footer = () => {
                         alt={`${platform.name} logo`}
                         className="w-full h-full object-contain"
                         onError={(e) => {
-                          e.target.src = `https://via.placeholder.com/32/6b7280/ffffff?text=${platform.name.charAt(
-                            0
-                          )}`;
+                          e.target.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%236b7280' rx='4'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-family='Arial' font-size='14' fill='%23ffffff'%3E${platform.name.charAt(0)}%3C/text%3E%3C/svg%3E`;
                         }}
                       />
                     </div>
@@ -410,8 +400,7 @@ const Footer = () => {
               <div className="relative group">
                 <button
                   className="font-semibold text-sm sm:text-base lg:text-lg uppercase tracking-wide cursor-pointer flex items-center justify-center lg:justify-start gap-1 hover:text-primary-600 transition-colors duration-200 w-full"
-                  style={{ color: "#1C1E19" }}
-                  onClick={(e) => {
+                      onClick={(e) => {
                     if (isTouchDevice) {
                       e.stopPropagation();
                       toggleDropdown(section);
@@ -457,8 +446,7 @@ const Footer = () => {
                         key={link.name}
                         to={link.href}
                         className="block px-3 sm:px-4 py-2 text-xs sm:text-sm hover:bg-gray-100 transition-colors duration-200"
-                        style={{ color: "#1C1E19" }}
-                        onClick={() => {
+                                  onClick={() => {
                           if (isTouchDevice) {
                             setOpenDropdown(null);
                           }

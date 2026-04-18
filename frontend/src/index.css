@@ -118,6 +118,9 @@
   --color-accent-800: #854d0e;
   --color-accent-900: #713f12;
 
+  /* Footer text color */
+  --color-footer-text: #1C1E19;
+
   /* Neutral colors with warm undertones */
   --color-neutral-50: #fafaf9;
   --color-neutral-100: #f4f4f3;
@@ -540,6 +543,11 @@
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border: 0;
+  }
+
+  /* Footer text color utility */
+  .text-footer-text {
+    color: var(--color-footer-text);
   }
 
   /* Typography utilities */

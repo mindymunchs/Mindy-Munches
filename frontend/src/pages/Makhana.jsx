@@ -1,7 +1,15 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
+import { setSEO } from "../utils/seo";
 
 const Makhana = () => {
+  useEffect(() => {
+    setSEO({
+      title: "Makhana — Premium Fox Nuts",
+      description: "Shop Mindy Munchs premium flavoured Makhana. Healthy roasted fox nuts in multiple flavours. FSSAI certified, no preservatives.",
+    });
+  }, []);
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header Section - Orange-Yellow Gradient Background */}

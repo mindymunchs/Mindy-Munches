@@ -1,2 +1,11 @@
 # Local Netlify folder
 .netlify
+# Added by code-review-graph
+.code-review-graph/
+
+
+.claude/
+.mcp.json
+CLAUDE.md
+Existing landing page.png
+landing inspo.png

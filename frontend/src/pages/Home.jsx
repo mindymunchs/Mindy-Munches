@@ -4,10 +4,18 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import ProductCard from "../components/ProductCard";
 import TestimonialCard from "../components/TestimonialCard";
-import { useVideoTestimonials } from "../components/VideoTestimonials"; // Import the hook
+import { useVideoTestimonials } from "../components/VideoTestimonials";
 import Loader from "../components/Loader";
+import { setSEO } from "../utils/seo";
 
 const Home = () => {
+  useEffect(() => {
+    setSEO({
+      title: "Game Up — Clean Performance Fuel",
+      description: "Mindy Munchs Game Up: India's clean performance fuel for high-performers. Powered by Sattu, Electrolytes & Omega 3. Low GI. Zero crash. Official partner of Star Strikers.",
+    });
+  }, []);
+
   const [products, setProducts] = useState([]);
   const [bestsellers, setBestsellers] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
@@ -1256,13 +1264,7 @@ const Home = () => {
           {/* Video Modal */}
           {activeVideo && (
             <motion.div
-              className="absolute inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
-              style={{
-                top: videoTestimonialsRef.current?.offsetTop || 0,
-                left: 0,
-                right: 0,
-                height: "100vh",
-              }}
+              className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -1344,6 +1346,7 @@ const Home = () => {
             transition={{ duration: 0.6, delay: 0.4 }}
             viewport={{ once: true }}
           >
+            {/* Marketing copy — update manually when stats change */}
             <div className="flex flex-wrap justify-center items-center gap-4 md:gap-8 text-neutral-600">
               <div className="flex items-center bg-white rounded-lg px-4 md:px-6 py-3 shadow-sm">
                 <span className="text-xl md:text-2xl mr-2 md:mr-3">⭐</span>

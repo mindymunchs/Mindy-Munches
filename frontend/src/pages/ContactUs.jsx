@@ -1,7 +1,15 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { FaInstagram, FaLinkedinIn, FaTwitter } from "react-icons/fa";
+import { setSEO } from "../utils/seo";
 
 const ContactUs = () => {
+  useEffect(() => {
+    setSEO({
+      title: "Contact Us",
+      description: "Get in touch with Mindy Munchs. We're here to help.",
+    });
+  }, []);
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header Section */}
