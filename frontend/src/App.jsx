@@ -25,7 +25,6 @@ import UserDashboard from "./pages/UserDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminInvite from "./pages/AdminInvite";
 import ProtectedRoute from "./components/ProtectedRoute";
-import BottomBar from "./components/BottomBar";
 import PaymentTest from "./components/PaymentTest";
 
 // Static Pages
@@ -389,7 +388,6 @@ function App() {
           </AnimatePresence>
         </main>
         <Footer />
-        <BottomBar />
       </div>
     </GoogleOAuthProvider>
   );
