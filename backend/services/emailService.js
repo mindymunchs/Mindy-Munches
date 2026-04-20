@@ -6,9 +6,9 @@ let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 if (process.env.BREVO_API_KEY) {
   let apiKey = apiInstance.authentications['apiKey'];
   apiKey.apiKey = process.env.BREVO_API_KEY;
-  console.log(' Brevo API initialized successfully');
+  console.log('✅ Brevo API initialized successfully');
 } else {
-  console.error('Brevo API key missing - add BREVO_API_KEY to .env');
+  console.error('❌ Brevo API key missing - add BREVO_API_KEY to .env');
 }
 
 // Core email sending function
@@ -28,12 +28,12 @@ const sendEmail = async (to, subject, htmlContent, senderName = 'Mindy Munchs') 
     };
     sendSmtpEmail.to = [{ email: to }];
 
-    console.log(` Sending email via Brevo API to ${to}`);
+    console.log(`📧 Sending email via Brevo API to ${to}`);
     const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
-    console.log(` Email sent successfully via Brevo to ${to}`);
+    console.log(`✅ Email sent successfully via Brevo to ${to}`);
     return result;
   } catch (error) {
-    console.error(` Failed to send email via Brevo to ${to}:`, error.response?.body || error.message);
+    console.error(`❌ Failed to send email via Brevo to ${to}:`, error.response?.body || error.message);
     throw error;
   }
 };
@@ -138,15 +138,15 @@ exports.sendNewProductNotification = async (email, productData, name = 'Valued C
 exports.sendOrderConfirmation = async (email, orderData) => {
   const subject = `Order Confirmation #${orderData.orderId} - Mindy Munchs`;
 
-  // ✅ SAFE DATE FORMATTING
+  // SAFE DATE FORMATTING
   const orderDate = orderData.createdAt ? 
     new Date(orderData.createdAt).toLocaleDateString('en-IN') : 
     new Date().toLocaleDateString('en-IN');
   
-  // ✅ SAFE ADDRESS FORMATTING
+  // SAFE ADDRESS FORMATTING
   const address = orderData.shippingAddress || {};
   const fullAddress = [
-    address.address,
+    address.street,
     address.city,
     address.state,
     address.pincode
@@ -195,9 +195,206 @@ exports.sendOrderConfirmation = async (email, orderData) => {
       </div>
     </body>
     </html>
-    `;
+  `;
   
   return await sendEmail(email, subject, htmlContent);
+};
+
+// ✅ NEW: Admin New Order Alert
+exports.sendAdminOrderAlert = async (orderData) => {
+  try {
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@mindymunchs.com';
+    
+    const subject = `🔔 New Order: ${orderData.orderNumber}`;
+    
+    const orderDate = orderData.createdAt ? 
+      new Date(orderData.createdAt).toLocaleString('en-IN') : 
+      new Date().toLocaleString('en-IN');
+    
+    const address = orderData.shippingAddress || {};
+    
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: #F37254; color: white; padding: 20px; text-align: center; }
+          .content { background: #f9f9f9; padding: 20px; }
+          .order-details { background: white; padding: 15px; margin: 15px 0; border-radius: 8px; }
+          .item { padding: 10px 0; border-bottom: 1px solid #eee; }
+          .total { font-size: 18px; font-weight: bold; color: #F37254; margin-top: 15px; }
+          .button { background: #F37254; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 15px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>🔔 New Order Received!</h1>
+          </div>
+          <div class="content">
+            <h2>Order #${orderData.orderNumber}</h2>
+            <p><strong>Order Date:</strong> ${orderDate}</p>
+            
+            <div class="order-details">
+              <h3>Customer Details:</h3>
+              <p><strong>Name:</strong> ${address.name || 'N/A'}</p>
+              <p><strong>Email:</strong> ${orderData.user?.email || 'Guest'}</p>
+              <p><strong>Phone:</strong> ${address.phone || 'N/A'}</p>
+              <p><strong>Address:</strong> ${address.street || ''}, ${address.city || ''}, ${address.state || ''} - ${address.zipCode || ''}</p>
+            </div>
+
+            <div class="order-details">
+              <h3>Order Items:</h3>
+              ${(orderData.items || []).map(item => `
+                <div class="item">
+                  <strong>${item.name || 'Unknown Item'}</strong><br>
+                  Quantity: ${item.quantity || 1} × ₹${(item.price || 0).toLocaleString('en-IN')} = ₹${((item.quantity || 1) * (item.price || 0)).toLocaleString('en-IN')}
+                </div>
+              `).join('')}
+              <p class="total">Total Amount: ₹${(orderData.totalAmount || 0).toLocaleString('en-IN')}</p>
+              <p><strong>Payment Method:</strong> ${orderData.paymentMethod === 'razorpay' ? 'Online Payment' : 'Cash on Delivery'}</p>
+              <p><strong>Payment Status:</strong> ${orderData.paymentStatus || 'Pending'}</p>
+            </div>
+
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/admin/orders" class="button">View in Admin Panel</a>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    return await sendEmail(adminEmail, subject, htmlContent);
+  } catch (error) {
+    console.error('❌ Failed to send admin alert email:', error);
+    throw error;
+  }
+};
+
+// ✅ NEW: Order Shipped Notification
+exports.sendShippedNotification = async (email, orderData) => {
+  try {
+    const subject = `📦 Your Order is Shipped - ${orderData.orderNumber}`;
+    
+    const address = orderData.shippingAddress || {};
+    
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: #F37254; color: white; padding: 20px; text-align: center; }
+          .content { background: #f9f9f9; padding: 20px; }
+          .tracking-box { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; text-align: center; }
+          .tracking-number { font-size: 24px; font-weight: bold; color: #F37254; padding: 15px; background: #fff3f0; border-radius: 5px; margin: 10px 0; }
+          .button { background: #F37254; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 15px; }
+          .info { background: white; padding: 15px; margin: 15px 0; border-radius: 8px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>📦 Your Order is On Its Way!</h1>
+          </div>
+          <div class="content">
+            <p>Hi ${address.name || 'Customer'},</p>
+            <p>Great news! Your order <strong>#${orderData.orderNumber}</strong> has been shipped and is on its way to you.</p>
+            
+            <div class="tracking-box">
+              <h3>Tracking Information</h3>
+              <p><strong>AWB/Tracking Number:</strong></p>
+              <div class="tracking-number">${orderData.trackingNumber || 'Generating...'}</div>
+              <p><strong>Courier:</strong> ${orderData.courierName || 'Assigned Soon'}</p>
+              <p><strong>Expected Delivery:</strong> ${orderData.estimatedDeliveryDate ? new Date(orderData.estimatedDeliveryDate).toLocaleDateString('en-IN') : '5-7 business days'}</p>
+              ${orderData.trackingUrl ? `<a href="${orderData.trackingUrl}" class="button">Track Your Order</a>` : ''}
+            </div>
+
+            <div class="info">
+              <h3>Delivery Address:</h3>
+              <p>${address.street || ''}<br>
+              ${address.city || ''}, ${address.state || ''}<br>
+              ${address.zipCode || ''}</p>
+            </div>
+
+            <p>You'll receive another notification when your order is out for delivery.</p>
+            <p>Thank you for shopping with Mindy Munchs! 🎉</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    return await sendEmail(email, subject, htmlContent);
+  } catch (error) {
+    console.error('❌ Failed to send shipped notification:', error);
+    throw error;
+  }
+};
+
+// ✅ NEW: Order Delivered Notification
+exports.sendDeliveredNotification = async (email, orderData) => {
+  try {
+    const subject = `✅ Order Delivered - ${orderData.orderNumber}`;
+    
+    const address = orderData.shippingAddress || {};
+    
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: #4CAF50; color: white; padding: 20px; text-align: center; }
+          .content { background: #f9f9f9; padding: 20px; }
+          .success-box { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; text-align: center; }
+          .icon { font-size: 60px; }
+          .button { background: #F37254; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 10px; }
+          .rating { font-size: 40px; letter-spacing: 10px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>✅ Order Delivered Successfully!</h1>
+          </div>
+          <div class="content">
+            <div class="success-box">
+              <div class="icon">🎉</div>
+              <h2>Thank You, ${address.name || 'Customer'}!</h2>
+              <p>Your order <strong>#${orderData.orderNumber}</strong> has been successfully delivered.</p>
+              <p><strong>Delivered on:</strong> ${orderData.deliveredAt ? new Date(orderData.deliveredAt).toLocaleString('en-IN') : new Date().toLocaleString('en-IN')}</p>
+            </div>
+
+            <div class="success-box">
+              <h3>We'd Love Your Feedback!</h3>
+              <p>How was your experience?</p>
+              <div class="rating">⭐⭐⭐⭐⭐</div>
+              <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/orders/${orderData._id}" class="button">Rate Your Order</a>
+            </div>
+
+            <p>If you have any issues or concerns, please don't hesitate to contact us.</p>
+            <p><strong>Order Total:</strong> ₹${(orderData.totalAmount || 0).toLocaleString('en-IN')}</p>
+            
+            <div style="text-align: center; margin-top: 30px;">
+              <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/products" class="button">Continue Shopping</a>
+            </div>
+
+            <p style="text-align: center; margin-top: 20px;">Thank you for choosing Mindy Munchs! 💚</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    return await sendEmail(email, subject, htmlContent);
+  } catch (error) {
+    console.error('❌ Failed to send delivered notification:', error);
+    throw error;
+  }
 };
 
 // Password Reset Email
@@ -245,10 +442,14 @@ exports.sendPasswordResetEmail = async (email, resetUrl) => {
   return await sendEmail(email, subject, htmlContent);
 };
 
+// Export all functions
 module.exports = {
   sendWelcomeEmail: exports.sendWelcomeEmail,
   sendNewsletterEmail: exports.sendNewsletterEmail,
   sendNewProductNotification: exports.sendNewProductNotification,
   sendOrderConfirmation: exports.sendOrderConfirmation,
+  sendAdminOrderAlert: exports.sendAdminOrderAlert, // ✅ NEW
+  sendShippedNotification: exports.sendShippedNotification, // ✅ NEW
+  sendDeliveredNotification: exports.sendDeliveredNotification, // ✅ NEW
   sendPasswordResetEmail: exports.sendPasswordResetEmail
 };

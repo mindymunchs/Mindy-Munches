@@ -87,7 +87,7 @@ const ProductCard = ({
   };
 
   const handleCardClick = () => {
-    navigate(`/products/${product.id}`);
+    navigate(`/product/${product.slug || product._id || product.id}`);
   };
 
   const bestsellerRanks = {
@@ -97,7 +97,7 @@ const ProductCard = ({
     4: { rank: 4, badge: "Best Value", sales: "150+ sold this month" },
   };
 
-  const bestseller = bestsellerRanks[product.id];
+  const bestseller = bestsellerRanks[product._id || product.id];
 
   return (
     <motion.div
@@ -191,7 +191,7 @@ const ProductCard = ({
         {/* Best Seller Badge */}
         {product.isBestseller && (
           <motion.div
-            className="absolute top-3 left-3 bg-green-600 text-white text-xs px-3 py-1 rounded-full font-medium flex items-center gap-1 z-10 backdrop-blur-sm"
+            className="absolute top-3 left-3 bg-primary-500 text-white text-xs px-3 py-1 rounded-full font-medium flex items-center gap-1 z-10 backdrop-blur-sm"
             initial={{ opacity: 0, x: -20, rotate: -10 }}
             animate={{ opacity: 1, x: 0, rotate: 0 }}
             transition={{
@@ -334,28 +334,28 @@ const ProductCard = ({
             ease: [0.25, 0.46, 0.45, 0.94],
           }}
         >
-          <div className="flex text-yellow-400">
-            {[...Array(5)].map((_, i) => (
-              <motion.span
-                key={i}
-                className="text-sm"
-                initial={{ opacity: 0, rotate: -10, scale: 0.5 }}
-                animate={{ opacity: 1, rotate: 0, scale: 1 }}
-                transition={{
-                  delay: 0.3 + i * 0.05,
-                  duration: 0.2,
-                  ease: [0.25, 0.46, 0.45, 0.94],
-                }}
-                whileHover={{
-                  scale: 1.3,
-                  rotate: 10,
-                  transition: { duration: 0.2 },
-                }}
-              >
-                ⭐
-              </motion.span>
-            ))}
-          </div>          
+          {(() => {
+            const rating = Math.min(5, Math.max(1, Math.round(product.rating || product.averageRating || 5)));
+            return (
+              <div className="flex text-yellow-400">
+                {[...Array(5)].map((_, i) => (
+                  <motion.span
+                    key={i}
+                    className={`text-sm ${i < rating ? "opacity-100" : "opacity-25"}`}
+                    initial={{ opacity: 0, rotate: -10, scale: 0.5 }}
+                    animate={{ opacity: i < rating ? 1 : 0.25, rotate: 0, scale: 1 }}
+                    transition={{
+                      delay: 0.3 + i * 0.05,
+                      duration: 0.2,
+                      ease: [0.25, 0.46, 0.45, 0.94],
+                    }}
+                  >
+                    ⭐
+                  </motion.span>
+                ))}
+              </div>
+            );
+          })()}
         </motion.div>
 
         {/* Stock Status */}
@@ -426,14 +426,14 @@ const ProductCard = ({
           className={`w-full font-semibold py-3 px-4 rounded-lg transition-all duration-200 text-sm uppercase tracking-wide ${
             product.stock === 0
               ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-              : "bg-green-600 hover:bg-green-700 text-white"
+              : "bg-primary-500 hover:bg-primary-600 text-white"
           }`}
           whileHover={
             product.stock > 0
               ? {
                   scale: 1.03,
                   y: -3,
-                  boxShadow: "0 10px 25px rgba(34, 197, 94, 0.3)",
+                  boxShadow: "0 10px 25px rgba(120, 113, 108, 0.3)",
                   transition: { duration: 0.2 },
                 }
               : {}

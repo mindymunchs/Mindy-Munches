@@ -9,18 +9,15 @@ const Footer = () => {
   const [openDropdown, setOpenDropdown] = useState(null);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
 
-
   // Newsletter subscription states
   const [email, setEmail] = useState("");
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [subscriptionMessage, setSubscriptionMessage] = useState("");
   const [subscriptionStatus, setSubscriptionStatus] = useState("");
 
-
   // Newsletter subscription handler
   const handleNewsletterSubmit = async (e) => {
     e.preventDefault();
-
 
     if (!email.trim()) {
       setSubscriptionMessage("Please enter a valid email address");
@@ -28,10 +25,8 @@ const Footer = () => {
       return;
     }
 
-
     setIsSubscribing(true);
     setSubscriptionMessage("");
-
 
     try {
       const response = await fetch(
@@ -48,9 +43,7 @@ const Footer = () => {
         }
       );
 
-
       const data = await response.json();
-
 
       if (data.success) {
         setSubscriptionMessage(data.message);
@@ -73,7 +66,6 @@ const Footer = () => {
     }
   };
 
-
   // More reliable touch device detection using media queries
   useEffect(() => {
     const checkTouchDevice = () => {
@@ -81,23 +73,18 @@ const Footer = () => {
       const noHover = window.matchMedia("(hover: none)").matches;
       const isSmallScreen = window.matchMedia("(max-width: 1023px)").matches;
 
-
       setIsTouchDevice(hasCoarsePointer || noHover || isSmallScreen);
     };
 
-
     checkTouchDevice();
-
 
     const coarsePointerQuery = window.matchMedia("(pointer: coarse)");
     const hoverQuery = window.matchMedia("(hover: none)");
     const screenSizeQuery = window.matchMedia("(max-width: 1023px)");
 
-
     coarsePointerQuery.addEventListener("change", checkTouchDevice);
     hoverQuery.addEventListener("change", checkTouchDevice);
     screenSizeQuery.addEventListener("change", checkTouchDevice);
-
 
     return () => {
       coarsePointerQuery.removeEventListener("change", checkTouchDevice);
@@ -106,10 +93,9 @@ const Footer = () => {
     };
   }, []);
 
-
   const footerLinks = {
     company: [
-      { name: "About Us", href: "/aboutus" },
+      { name: "About Us", href: "/about" },
       { name: "Our Story", href: "/story" },
     ],
     products: [
@@ -118,15 +104,14 @@ const Footer = () => {
     ],
     support: [
       { name: "Contact Us", href: "/contact" },
-      { name: "Returns", href: "/returns" },
-      { name: "Shipping", href: "/shipping-policy" },
+      { name: "Returns", href: "/refund" },
+      { name: "Shipping", href: "/shipping" },
     ],
     legal: [
-      { name: "Privacy Policy", href: "/privacy-policy" },
-      { name: "Terms and Conditions", href: "/terms-and-conditions" },
+      { name: "Privacy Policy", href: "/privacy" },
+      { name: "Terms and Conditions", href: "/terms" },
     ],
   };
-
 
   const socialLinks = [
     {
@@ -139,7 +124,6 @@ const Footer = () => {
         </svg>
       ),
     },
-    
     {
       name: "Facebook",
       href: "https://www.facebook.com/profile.php?id=61582397551315",
@@ -152,26 +136,24 @@ const Footer = () => {
     },
   ];
 
-
   // Available on platforms - round logos without hyperlinks
   const availablePlatforms = [
     {
       name: "Blinkit",
-      logoSrc: "/blinkit-logo.png", // Replace with your actual logo path
+      logoSrc: "/blinkit-logo.png",
     },
     {
       name: "Amazon",
       target: "_blank",
       href: "https://www.amazon.in/Makhana-Hi-Protein-Heart-Healthy-Anti-Aging-Superfood/dp/B0FRFP22GY/ref=sr_1_3?sr=8-3",
-      logoSrc: "/amazon-logo.png", // Replace with your actual logo path
+      logoSrc: "/amazon-logo.png",
     },
     {
       name: "Flipkart",
       logoSrc: "/flipkart-logo.png",
-      href: "https://www.flipkart.com/mindy-munchs-masala-sattu-powder-roasted-channa-flour-nutritious-indian-superfood/p/itmca51203e65cbf?pid=FLRHGF7DFVYUMH5B&lid=LSTFLRHGF7DFVYUMH5BHVL586&marketplace=FLIPKART&q=mindy+munchs+sattu&store=eat%2Fe6o&srno=s_1_2&otracker=AS_QueryStore_HistoryAutoSuggest_1_6_na_na_na&otracker1=AS_QueryStore_HistoryAutoSuggest_1_6_na_na_na&fm=search-autosuggest&iid=de0a0604-c5ab-47a2-a63f-a887c47748f0.FLRHGF7DFVYUMH5B.SEARCH&ppt=sp&ppn=sp&ssid=aw6q3iev280000001762241812768&qH=b5110f6268c4cafa" // Replace with your actual logo path
+      href: "https://www.flipkart.com/mindy-munchs-masala-sattu-powder-roasted-channa-flour-nutritious-indian-superfood/p/itmca51203e65cbf?pid=FLRHGF7DFVYUMH5B&lid=LSTFLRHGF7DFVYUMH5BHVL586&marketplace=FLIPKART&q=mindy+munchs+sattu&store=eat%2Fe6o&srno=s_1_2&otracker=AS_QueryStore_HistoryAutoSuggest_1_6_na_na_na&otracker1=AS_QueryStore_HistoryAutoSuggest_1_6_na_na_na&fm=search-autosuggest&iid=de0a0604-c5ab-47a2-a63f-a887c47748f0.FLRHGF7DFVYUMH5B.SEARCH&ppt=sp&ppn=sp&ssid=aw6q3iev280000001762241812768&qH=b5110f6268c4cafa",
     },
   ];
-
 
   const toggleDropdown = (section) => {
     if (openDropdown === section) {
@@ -181,33 +163,20 @@ const Footer = () => {
     }
   };
 
-
   const handleClickOutside = () => {
     if (isTouchDevice) {
       setOpenDropdown(null);
     }
   };
 
-
   return (
     <footer
-      className="relative bg-white overflow-hidden min-h-screen"
-      style={{ color: "#1C1E19" }}
+      className="bg-neutral-100 border-t-2 border-neutral-200 text-footer-text"
       onClick={handleClickOutside}
     >
-      {/* Background Image Container - Bottom Half Only */}
-      <div className="absolute bottom-0 left-0 w-full h-1/2 sm:h-2/3 z-0">
-        <img
-          src="/footer-bg.png"
-          alt="Traditional Indian farm landscape"
-          className="w-full h-full object-cover object-center"
-        />
-      </div>
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
 
-
-      {/* Content */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
-        {/* Top Section: Logo + Newsletter + Location - Responsive Layout */}
+        {/* ── Top Row: Logo+Social | Newsletter | Address+Platforms ── */}
         <motion.div
           className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-8 sm:gap-12 lg:gap-16 w-full mb-12 sm:mb-16 lg:mb-10"
           initial={{ opacity: 0, y: 30 }}
@@ -215,24 +184,25 @@ const Footer = () => {
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
         >
-          {/* Left: Logo + Social Media */}
+          {/* LEFT: Logo + tagline + Social */}
           <div className="flex flex-col items-center lg:items-start gap-6 sm:gap-8 lg:gap-12">
-            <Link to="/" className="flex items-center justify-center space-x-3">
-              <div className="w-24 h-24 sm:w-28 sm:h-28 lg:w-35 lg:h-35 rounded-lg flex items-center justify-center">
-                <img
-                  src="/Mindy Munchs_Logo-01.png"
-                  alt="Mindy Munchs Logo"
-                  className="w-full h-full object-contain"
-                />
-              </div>
-            </Link>
-
+            <div>
+              <Link to="/" className="flex items-center justify-center space-x-3">
+                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-lg flex items-center justify-center">
+                  <img
+                    src="/mindy-munchs-logo.png"
+                    alt="Mindy Munchs Logo"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              </Link>
+              <p className="font-sans text-xs text-neutral-500 text-center lg:text-left mt-2">
+                Clean Performance Fuel for India
+              </p>
+            </div>
 
             <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
-              <span
-                className="font-medium text-sm sm:text-base"
-                style={{ color: "#1C1E19" }}
-              >
+              <span className="font-medium text-sm sm:text-base">
                 Follow us:
               </span>
               <div className="flex gap-3 sm:gap-6">
@@ -242,9 +212,8 @@ const Footer = () => {
                     href={social.href}
                     target={social.target}
                     rel="noopener noreferrer"
-                    className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-200 hover:bg-primary-500 rounded-full flex items-center justify-center hover:text-white hover:scale-110 transition-all duration-200"
+                    className="w-8 h-8 sm:w-10 sm:h-10 bg-neutral-100 hover:bg-primary-600 rounded-full flex items-center justify-center hover:text-white hover:scale-110 transition-all duration-200"
                     title={social.name}
-                    style={{ color: "#1C1E19" }}
                   >
                     {social.iconSvg}
                   </a>
@@ -253,17 +222,12 @@ const Footer = () => {
             </div>
           </div>
 
-
-          {/* Center: Newsletter Signup */}
+          {/* CENTER: Newsletter */}
           <div className="text-center flex flex-col items-center gap-6 sm:gap-8 lg:gap-10 px-2">
-            <p
-              className="max-w-xs sm:max-w-sm md:max-w-md text-sm sm:text-base leading-relaxed"
-              style={{ color: "#1C1E19" }}
-            >
-              Subscribe for special offers, newsletters and become a part of our
-              movement towards traditional Indian superfoods
+            <p className="max-w-xs sm:max-w-sm md:max-w-md text-sm sm:text-base leading-relaxed">
+              Get Game Up launch offers, recipes, and performance
+              tips — straight to your inbox.
             </p>
-
 
             <form
               onSubmit={handleNewsletterSubmit}
@@ -275,15 +239,15 @@ const Footer = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Your e-mail"
                 disabled={isSubscribing}
-                className="px-3 sm:px-4 py-2 sm:py-3 text-gray-900 placeholder-gray-600 bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 w-full sm:flex-1 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 sm:px-4 py-2 sm:py-3 text-gray-900 placeholder-gray-600 bg-white border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-300 w-full sm:flex-1 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <button
                 type="submit"
                 disabled={isSubscribing}
-                className="px-4 sm:px-6 py-2 sm:py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold transition-colors duration-200 mt-2 sm:mt-0 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="px-4 sm:px-6 py-2 sm:py-3 bg-accent-500 hover:bg-accent-600 text-neutral-900 font-semibold transition-colors duration-200 mt-2 sm:mt-0 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
                 {isSubscribing ? (
-                  <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-neutral-900 border-t-transparent rounded-full animate-spin"></div>
                 ) : (
                   <svg
                     className="w-4 h-4 sm:w-5 sm:h-5 mx-auto"
@@ -302,8 +266,6 @@ const Footer = () => {
               </button>
             </form>
 
-
-            {/* Subscription feedback message */}
             {subscriptionMessage && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
@@ -319,43 +281,35 @@ const Footer = () => {
             )}
           </div>
 
-
-          {/* Right: Location + Available On */}
+          {/* RIGHT: Address + Platforms */}
           <div className="text-center lg:text-right space-y-3 sm:space-y-4">
-            <div className="font-semibold text-sm sm:text-base leading-relaxed" style={{ color: "#1C1E19" }}>
+            <div className="font-sans text-sm leading-relaxed">
               <div>8/5, SITE-IV, Sahibabad Road,</div>
               <div>Sahibabad Industrial Area,</div>
               <div>Ghaziabad, Uttar Pradesh - 201301</div>
             </div>
-            <div className="text-sm sm:text-base" style={{ color: "#1C1E19" }}>
+            <div className="font-sans text-sm">
               <span className="font-medium">For Bulk Order Write Us At: </span>
               <a
                 href="mailto:wecare@mindymunchs.com"
-                className="underline hover:text-primary-600 transition-colors duration-200 break-all"
-                style={{ color: "#1C1E19" }}
+                className="underline text-primary-600 hover:text-primary-700 transition-colors duration-200 break-all"
               >
                 wecare@mindymunchs.com
               </a>
             </div>
 
-
-            {/* Available On Section - Fixed to center-align text with circles */}
-            <div className="flex flex-col sm:flex-row items-center lg:items-center lg:justify-end gap-3 sm:gap-4 mt-18">
-              <span
-                className="font-medium text-sm sm:text-base"
-                style={{ color: "#1C1E19" }}
-              >
+            {/* Available On */}
+            <div className="flex flex-col sm:flex-row items-center lg:items-center lg:justify-end gap-3 sm:gap-4 mt-4">
+              <span className="font-medium text-sm sm:text-base">
                 Available on:
               </span>
-
-
               <div className="flex gap-3 sm:gap-6">
                 {availablePlatforms.map((platform) =>
                   platform.href ? (
                     <a
                       key={platform.name}
                       href={platform.href}
-                      target={platform.target || "_blank"} // open in new tab
+                      target={platform.target || "_blank"}
                       rel="noopener noreferrer"
                       className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 hover:bg-primary-500 rounded-full flex items-center justify-center hover:scale-110 transition-all duration-200 p-1"
                       title={`Available on ${platform.name}`}
@@ -365,9 +319,7 @@ const Footer = () => {
                         alt={`${platform.name} logo`}
                         className="w-full h-full object-contain"
                         onError={(e) => {
-                          e.target.src = `https://via.placeholder.com/32/6b7280/ffffff?text=${platform.name.charAt(
-                            0
-                          )}`;
+                          e.target.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%236b7280' rx='4'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-family='Arial' font-size='14' fill='%23ffffff'%3E${platform.name.charAt(0)}%3C/text%3E%3C/svg%3E`;
                         }}
                       />
                     </a>
@@ -382,9 +334,7 @@ const Footer = () => {
                         alt={`${platform.name} logo`}
                         className="w-full h-full object-contain"
                         onError={(e) => {
-                          e.target.src = `https://via.placeholder.com/32/6b7280/ffffff?text=${platform.name.charAt(
-                            0
-                          )}`;
+                          e.target.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%236b7280' rx='4'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-family='Arial' font-size='14' fill='%23ffffff'%3E${platform.name.charAt(0)}%3C/text%3E%3C/svg%3E`;
                         }}
                       />
                     </div>
@@ -395,8 +345,7 @@ const Footer = () => {
           </div>
         </motion.div>
 
-
-        {/* Dropdown Navigation Links - Responsive Grid (Position unchanged) */}
+        {/* ── Nav Dropdown Links ── */}
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:flex lg:flex-wrap lg:justify-center gap-6 sm:gap-8 lg:gap-12 mb-12 sm:mb-16 lg:mb-20">
           {Object.entries(footerLinks).map(([section, links], index) => (
             <motion.div
@@ -409,8 +358,7 @@ const Footer = () => {
             >
               <div className="relative group">
                 <button
-                  className="font-semibold text-sm sm:text-base lg:text-lg uppercase tracking-wide cursor-pointer flex items-center justify-center lg:justify-start gap-1 hover:text-primary-600 transition-colors duration-200 w-full"
-                  style={{ color: "#1C1E19" }}
+                  className="font-heading font-semibold text-sm uppercase tracking-wide text-neutral-800 cursor-pointer flex items-center justify-center lg:justify-start gap-1 hover:text-primary-600 transition-colors duration-200 w-full"
                   onClick={(e) => {
                     if (isTouchDevice) {
                       e.stopPropagation();
@@ -440,10 +388,9 @@ const Footer = () => {
                   </svg>
                 </button>
 
-
-                {/* Dropdown Menu - Position unchanged */}
+                {/* Dropdown Menu */}
                 <div
-                  className={`absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-40 sm:w-48 bg-white rounded-lg shadow-xl border border-gray-200 transition-all duration-300 z-20 ${
+                  className={`absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-40 sm:w-48 bg-white rounded-lg shadow-xl border border-neutral-200 transition-all duration-300 z-20 ${
                     isTouchDevice
                       ? openDropdown === section
                         ? "opacity-100 visible"
@@ -456,8 +403,7 @@ const Footer = () => {
                       <Link
                         key={link.name}
                         to={link.href}
-                        className="block px-3 sm:px-4 py-2 text-xs sm:text-sm hover:bg-gray-100 transition-colors duration-200"
-                        style={{ color: "#1C1E19" }}
+                        className="block px-3 sm:px-4 py-2 text-xs sm:text-sm hover:bg-neutral-50 transition-colors duration-200"
                         onClick={() => {
                           if (isTouchDevice) {
                             setOpenDropdown(null);
@@ -473,6 +419,14 @@ const Footer = () => {
             </motion.div>
           ))}
         </div>
+
+        {/* ── Copyright Bar ── */}
+        <div className="border-t border-neutral-200 pt-6 pb-4">
+          <p className="font-sans text-xs text-neutral-500 text-center">
+            © {currentYear} Mindy Munchs. All rights reserved.
+          </p>
+        </div>
+
       </div>
     </footer>
   );

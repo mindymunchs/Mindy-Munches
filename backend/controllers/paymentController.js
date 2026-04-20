@@ -76,6 +76,28 @@ exports.verifyPayment = async (req, res) => {
       });
     }
 
+    // Duplicate payment guard — only match a fully paid record for this paymentId
+    const existingOrder = await Order.findOne({
+      razorpayPaymentId: razorpay_payment_id,
+      paymentStatus: "paid",
+    });
+
+    if (existingOrder) {
+      return res.json({
+        success: true,
+        message: "Payment already processed",
+        orderId: existingOrder._id,
+        orderNumber: existingOrder.orderNumber,
+        order: {
+          items: existingOrder.items,
+          subtotal: existingOrder.subtotal,
+          shippingCost: existingOrder.shippingCost,
+          totalAmount: existingOrder.totalAmount,
+          shippingAddress: existingOrder.shippingAddress,
+        },
+      });
+    }
+
     // Generate order number
     const timestamp = Date.now().toString();
     const random = Math.floor(Math.random() * 1000)
@@ -115,10 +137,31 @@ exports.verifyPayment = async (req, res) => {
       razorpayOrderId: razorpay_order_id,
       razorpayPaymentId: razorpay_payment_id,
       razorpaySignature: razorpay_signature,
-      estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
-    const savedOrder = await newOrder.save();
+    let savedOrder;
+    try {
+      savedOrder = await newOrder.save();
+    } catch (saveError) {
+      // Race condition: concurrent request already inserted this paymentId
+      if (saveError.code === 11000 && saveError.keyPattern?.razorpayPaymentId) {
+        const racedOrder = await Order.findOne({ razorpayPaymentId: razorpay_payment_id });
+        return res.json({
+          success: true,
+          message: "Payment already processed",
+          orderId: racedOrder._id,
+          orderNumber: racedOrder.orderNumber,
+          order: {
+            items: racedOrder.items,
+            subtotal: racedOrder.subtotal,
+            shippingCost: racedOrder.shippingCost,
+            totalAmount: racedOrder.totalAmount,
+            shippingAddress: racedOrder.shippingAddress,
+          },
+        });
+      }
+      throw saveError;
+    }
 
     // Update product stock
     for (const item of orderItems) {

@@ -1,7 +1,15 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
+import { setSEO } from "../utils/seo";
 
 const Sattu = () => {
+  useEffect(() => {
+    setSEO({
+      title: "Sattu — Traditional Superfood Drink",
+      description: "Mindy Munchs Sattu drinks. India's original superfuel reimagined. High protein, low GI, natural energy.",
+    });
+  }, []);
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header Section - Orange-Yellow Gradient Background */}

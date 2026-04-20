@@ -12,15 +12,22 @@ export default defineConfig(({ mode }) => {
     ],
     server: {
       port: 3000,
+      proxy: {
+        "/api": {
+          target: "http://localhost:5000", // Your backend port
+          changeOrigin: true,
+          secure: false,
+        },
+      },
     },
     // REMOVE this line - external is for library builds, not apps
     // external: ["react", "react-dom"],
-    
+
     optimizeDeps: {
       include: ["react/jsx-runtime", "framer-motion"], // Include framer-motion
       // REMOVE exclude for framer-motion - you can't include and exclude same package
     },
-    
+
     esbuild: {
       pure:
         mode === "production"
@@ -28,7 +35,7 @@ export default defineConfig(({ mode }) => {
           : [],
       drop: mode === "production" ? ["console", "debugger"] : [],
     },
-    
+
     build: {
       minify: "esbuild",
       rollupOptions: {

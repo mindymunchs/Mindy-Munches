@@ -7,8 +7,15 @@ import Loader from "../components/Loader";
 import EmptyState from "../components/EmptyState";
 import useCartStore from "../store/cartStore";
 import { Link } from "react-router-dom";
+import { setSEO } from "../utils/seo";
 
 const Products = () => {
+  useEffect(() => {
+    setSEO({
+      title: "Shop All Products",
+      description: "Browse all Mindy Munchs products — Makhana snacks and Sattu drinks. Healthy Indian superfoods delivered to your door.",
+    });
+  }, []);
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);

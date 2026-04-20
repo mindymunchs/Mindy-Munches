@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
+import { setSEO } from "../utils/seo";
 import { motion, AnimatePresence } from "framer-motion";
 import useCartStore from "../store/cartStore";
 import useAuthStore from "../store/authStore";
@@ -43,11 +44,9 @@ const ImageZoom = ({ src, alt }) => {
           transform: isZooming ? "scale(2)" : "scale(1)",
           transformOrigin: `${position.x}% ${position.y}%`,
         }}
-        onLoad={() => console.log("Image loaded:", src)}
         onError={(e) => {
-          console.error("Image failed to load:", e.target.src);
           e.target.src =
-            "https://via.placeholder.com/400x400/f3f4f6/9ca3af?text=Image+Not+Found";
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect width='400' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-family='Arial' font-size='16' fill='%239ca3af'%3EImage Not Found%3C/text%3E%3C/svg%3E";
         }}
       />
       {isZooming && (
@@ -60,7 +59,7 @@ const ImageZoom = ({ src, alt }) => {
 };
 
 const ProductDetail = () => {
-  const { id } = useParams();
+  const { slug } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const [product, setProduct] = useState(null);
@@ -112,25 +111,16 @@ const ProductDetail = () => {
         try {
           // First, try to fetch from API
           if (import.meta.env.VITE_API_URL && !isNetlify()) {
-            console.log("Attempting to fetch from API...");
             response = await fetch(
-              `${import.meta.env.VITE_API_URL}/products/${id}`,
-              {
-                headers: { Accept: "application/json" },
-              }
+              `${import.meta.env.VITE_API_URL}/products/${slug}`,
+              { headers: { Accept: "application/json" } }
             );
 
             if (response.ok) {
               const apiResponse = await response.json();
-              console.log("Product fetched from API:", apiResponse);
 
-              // Handle API response structure properly
-              if (
-                apiResponse.success &&
-                apiResponse.data &&
-                apiResponse.data.product
-              ) {
-                product = apiResponse.data.product; // Extract product from nested structure
+              if (apiResponse.success && apiResponse.data?.product) {
+                product = apiResponse.data.product;
               } else if (apiResponse.data) {
                 product = apiResponse.data;
               } else {
@@ -140,35 +130,22 @@ const ProductDetail = () => {
               try {
                 const allProductsRes = await fetch(
                   `${import.meta.env.VITE_API_URL}/products`,
-                  {
-                    headers: { Accept: "application/json" },
-                  }
+                  { headers: { Accept: "application/json" } }
                 );
                 if (allProductsRes.ok) {
                   const allProducts = await allProductsRes.json();
                   products = allProducts.products || allProducts;
                 }
-              } catch (relatedError) {
-                console.warn(
-                  "Could not fetch related products from API:",
-                  relatedError
-                );
+              } catch {
                 products = [];
               }
             } else {
               throw new Error(`API failed with status ${response.status}`);
             }
           } else {
-            throw new Error(
-              "API not available or Netlify environment detected"
-            );
+            throw new Error("API not available or Netlify environment detected");
           }
-        } catch (apiError) {
-          console.warn(
-            "API failed, falling back to products.json:",
-            apiError.message
-          );
-
+        } catch {
           // Fallback to products.json file
           try {
             response = await fetch("/data/products.json", {
@@ -178,25 +155,26 @@ const ProductDetail = () => {
             if (response.ok) {
               const data = await response.json();
               products = data.products || data;
-              product = products.find((p) => p.id === parseInt(id));
-              console.log("Product fetched from products.json:", product);
+              product = products.find((p) => p.slug === slug);
             } else {
               throw new Error("products.json file not found");
             }
           } catch (publicError) {
-            console.warn("products.json failed:", publicError.message);
             throw publicError;
           }
         }
 
         // Product not found
         if (!product) {
-          console.error(`Product with ID ${id} not found`);
           navigate("/products");
           return;
         }
 
         setProduct(product);
+        setSEO({
+          title: product.name,
+          description: product.description?.slice(0, 155) || 'Premium Mindy Munchs product',
+        });
 
         // Related products logic
         let related = [];
@@ -208,8 +186,7 @@ const ProductDetail = () => {
             .slice(0, 4);
         }
         setRelatedProducts(related);
-      } catch (error) {
-        console.error("Error loading product:", error);
+      } catch {
         navigate("/products");
       } finally {
         setLoading(false);
@@ -217,7 +194,7 @@ const ProductDetail = () => {
     };
 
     loadProduct();
-  }, [id, navigate]);
+  }, [slug, navigate]);
 
   // Enhanced image handling with proper URL resolution
   const productImages = useMemo(() => {
@@ -1097,11 +1074,13 @@ const ProductDetail = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {relatedProducts.map((relatedProduct, index) => (
-                <ProductCard
-                  key={relatedProduct.id}
-                  product={relatedProduct}
-                  index={index}
-                />
+                <Link to={`/products/${relatedProduct.slug}`}>
+                  <ProductCard
+                    key={relatedProduct._id}
+                    product={relatedProduct}
+                    index={index}
+                  />
+                </Link>
               ))}
             </div>
           </div>

@@ -1,11 +1,8 @@
 const { validationResult } = require("express-validator");
 const Product = require("../models/Product");
-
 const User = require("../models/User");
 const Guest = require("../models/Guest");
 const emailService = require("../services/emailService");
-
-//const { notifyNewProduct } = require('../services/notificationService');
 
 // Get all products with filtering, sorting, and pagination
 const getAllProducts = async (req, res) => {
@@ -22,7 +19,6 @@ const getAllProducts = async (req, res) => {
       isActive = true,
     } = req.query;
 
-    // Build filter object
     const filter = {};
     if (isActive !== "false") {
       filter.isActive = true;
@@ -42,21 +38,16 @@ const getAllProducts = async (req, res) => {
       filter.$text = { $search: search };
     }
 
-    // Build sort object
     const sortObj = {};
     sortObj[sort] = order === "desc" ? -1 : 1;
 
-    // Calculate pagination
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    // Execute query - FIXED: Use correct populate path
     const products = await Product.find(filter)
       .sort(sortObj)
       .skip(skip)
-      .limit(parseInt(limit))
-      .populate("ratings.reviews.user", "name");
+      .limit(parseInt(limit));
 
-    // Get total count for pagination
     const total = await Product.countDocuments(filter);
 
     res.json({
@@ -94,9 +85,7 @@ const getFeaturedProducts = async (req, res) => {
 
     res.json({
       success: true,
-      data: {
-        products,
-      },
+      data: { products },
     });
   } catch (error) {
     console.error("Get featured products error:", error);
@@ -112,12 +101,9 @@ const getFeaturedProducts = async (req, res) => {
 const getCategories = async (req, res) => {
   try {
     const categories = await Product.distinct("category", { isActive: true });
-
     res.json({
       success: true,
-      data: {
-        categories,
-      },
+      data: { categories },
     });
   } catch (error) {
     console.error("Get categories error:", error);
@@ -171,11 +157,10 @@ const searchProducts = async (req, res) => {
   }
 };
 
-// New function to get bestsellers
+// Get bestsellers
 const getBestsellers = async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit) || 6; // Default to 6, allow override
-
+    const limit = parseInt(req.query.limit) || 6;
     const products = await Product.find({
       isBestseller: true,
       isActive: true,
@@ -189,19 +174,59 @@ const getBestsellers = async (req, res) => {
     });
   } catch (error) {
     console.error("Get bestsellers error:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to fetch bestsellers" });
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to fetch bestsellers" 
+    });
   }
 };
 
-// Get single product by ID
+// ✅ Get single product by slug (with fallback to ID for backward compatibility)
+const getProductBySlug = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    console.log("🔍 Looking for product with slug:", slug);
+
+    let product;
+
+    // Check if it's a valid MongoDB ObjectId (old URL format)
+    if (slug.match(/^[0-9a-fA-F]{24}$/)) {
+      product = await Product.findById(slug);
+      if (product && product.slug) {
+        return res.redirect(301, `/api/products/${product.slug}`);
+      }
+    } else {
+      // Find by slug (new format)
+      product = await Product.findOne({ slug, isActive: true });
+    }
+
+    if (!product) {
+      console.log("❌ Product not found with slug:", slug);
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    console.log("✅ Found product:", product.name);
+    res.json({
+      success: true,
+      data: { product },
+    });
+  } catch (error) {
+    console.error("❌ Get product error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch product",
+      error: error.message,
+    });
+  }
+};
+
+// ✅ Legacy route - Get product by ID (redirects to slug)
 const getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id).populate(
-      "ratings.reviews.user",
-      "name"
-    );
+    const product = await Product.findById(req.params.id);
 
     if (!product) {
       return res.status(404).json({
@@ -210,11 +235,15 @@ const getProductById = async (req, res) => {
       });
     }
 
+    // Redirect to slug URL if slug exists
+    if (product.slug) {
+      return res.redirect(301, `/api/products/${product.slug}`);
+    }
+
+    // Fallback: return product if no slug
     res.json({
       success: true,
-      data: {
-        product,
-      },
+      data: { product },
     });
   } catch (error) {
     console.error("Get product error:", error);
@@ -238,19 +267,13 @@ const createProduct = async (req, res) => {
       });
     }
 
-    // Ensure images array has at least one image with proper structure
-    if (
-      !req.body.images ||
-      !Array.isArray(req.body.images) ||
-      req.body.images.length === 0
-    ) {
-      req.body.images = [
-        {
-          url: "/placeholder-image.jpg",
-          alt: req.body.name || "Product image",
-          isPrimary: true,
-        },
-      ];
+    // Ensure images array has at least one image
+    if (!req.body.images || !Array.isArray(req.body.images) || req.body.images.length === 0) {
+      req.body.images = [{
+        url: "/placeholder-image.jpg",
+        alt: req.body.name || "Product image",
+        isPrimary: true,
+      }];
     }
 
     // Ensure at least one image is marked as primary
@@ -262,20 +285,15 @@ const createProduct = async (req, res) => {
     // Create product with processed data
     const productData = {
       ...req.body,
-      // Ensure proper data types
       price: parseFloat(req.body.price),
-      originalPrice: req.body.originalPrice
-        ? parseFloat(req.body.originalPrice)
-        : null,
+      originalPrice: req.body.originalPrice ? parseFloat(req.body.originalPrice) : null,
       stock: parseInt(req.body.stock),
-      weight:
-        req.body.weight && req.body.weight.value
-          ? {
-              value: parseFloat(req.body.weight.value),
-              unit: req.body.weight.unit || "g",
-            }
-          : undefined,
-      // Handle nutritional info
+      weight: req.body.weight && req.body.weight.value
+        ? {
+            value: parseFloat(req.body.weight.value),
+            unit: req.body.weight.unit || "g",
+          }
+        : undefined,
       nutritionalInfo: req.body.nutritionalInfo
         ? Object.keys(req.body.nutritionalInfo).reduce((acc, key) => {
             const value = parseFloat(req.body.nutritionalInfo[key]);
@@ -283,40 +301,27 @@ const createProduct = async (req, res) => {
             return acc;
           }, {})
         : undefined,
-      // Ensure boolean fields
-      isActive:
-        req.body.isActive !== undefined ? Boolean(req.body.isActive) : true,
-      isFeatured:
-        req.body.isFeatured !== undefined
-          ? Boolean(req.body.isFeatured)
-          : false,
-      isOrganic:
-        req.body.isOrganic !== undefined ? Boolean(req.body.isOrganic) : false,
-      isBestseller:
-        req.body.isBestseller !== undefined
-          ? Boolean(req.body.isBestseller)
-          : false,
+      isActive: req.body.isActive !== undefined ? Boolean(req.body.isActive) : true,
+      isFeatured: req.body.isFeatured !== undefined ? Boolean(req.body.isFeatured) : false,
+      isOrganic: req.body.isOrganic !== undefined ? Boolean(req.body.isOrganic) : false,
+      isBestseller: req.body.isBestseller !== undefined ? Boolean(req.body.isBestseller) : false,
     };
 
     const product = new Product(productData);
     await product.save();
 
-    console.log("Product created successfully:", product._id);
+    console.log("✅ Product created successfully:", product._id);
+    console.log("✅ Slug generated:", product.slug);
 
-    // Replace the existing notification block with this:
+    // Send newsletter notifications
     if (product.isActive) {
       console.log("📢 Sending new product notifications...");
-
       try {
-        // Get all newsletter subscribers
-        const subscribers = await Guest.find({
-          newsletterSubscribed: true,
-        }).select("email name");
+        const subscribers = await Guest.find({ newsletterSubscribed: true }).select("email name");
 
         let emailsSent = 0;
         let emailsFailed = 0;
 
-        // Send emails to all subscribers
         for (const subscriber of subscribers) {
           try {
             await emailService.sendNewProductNotification(subscriber.email, {
@@ -330,41 +335,33 @@ const createProduct = async (req, res) => {
             });
             emailsSent++;
           } catch (emailError) {
-            console.error(
-              ` Failed to send email to ${subscriber.email}:`,
-              emailError
-            );
+            console.error(`❌ Failed to send email to ${subscriber.email}:`, emailError);
             emailsFailed++;
           }
         }
 
-        console.log(
-          ` New product notifications: ${emailsSent} sent, ${emailsFailed} failed`
-        );
+        console.log(`✅ New product notifications: ${emailsSent} sent, ${emailsFailed} failed`);
       } catch (error) {
-        console.error(" New product notification error:", error);
+        console.error("❌ New product notification error:", error);
       }
     } else {
-      console.log(" Product is inactive - no notifications sent");
+      console.log("ℹ️ Product is inactive - no notifications sent");
     }
 
     res.status(201).json({
       success: true,
       message: "Product created successfully",
-      data: {
-        product,
-      },
+      data: { product },
       notification: product.isActive
         ? "Newsletter notifications triggered for active subscribers"
         : "Product inactive - no notifications sent",
     });
   } catch (error) {
     console.error("Create product error:", error);
-
     if (error.code === 11000) {
       return res.status(400).json({
         success: false,
-        message: "Product with this SKU already exists",
+        message: "Product with this SKU or slug already exists",
       });
     }
 
@@ -399,21 +396,17 @@ const updateProduct = async (req, res) => {
       });
     }
 
-    // Process the update data similar to create
     const updateData = {
       ...req.body,
       price: parseFloat(req.body.price),
-      originalPrice: req.body.originalPrice
-        ? parseFloat(req.body.originalPrice)
-        : null,
+      originalPrice: req.body.originalPrice ? parseFloat(req.body.originalPrice) : null,
       stock: parseInt(req.body.stock),
-      weight:
-        req.body.weight && req.body.weight.value
-          ? {
-              value: parseFloat(req.body.weight.value),
-              unit: req.body.weight.unit || "g",
-            }
-          : undefined,
+      weight: req.body.weight && req.body.weight.value
+        ? {
+            value: parseFloat(req.body.weight.value),
+            unit: req.body.weight.unit || "g",
+          }
+        : undefined,
       nutritionalInfo: req.body.nutritionalInfo
         ? Object.keys(req.body.nutritionalInfo).reduce((acc, key) => {
             const value = parseFloat(req.body.nutritionalInfo[key]);
@@ -421,22 +414,10 @@ const updateProduct = async (req, res) => {
             return acc;
           }, {})
         : undefined,
-      isActive:
-        req.body.isActive !== undefined
-          ? Boolean(req.body.isActive)
-          : undefined,
-      isFeatured:
-        req.body.isFeatured !== undefined
-          ? Boolean(req.body.isFeatured)
-          : undefined,
-      isOrganic:
-        req.body.isOrganic !== undefined
-          ? Boolean(req.body.isOrganic)
-          : undefined,
-      isBestseller:
-        req.body.isBestseller !== undefined
-          ? Boolean(req.body.isBestseller)
-          : undefined,
+      isActive: req.body.isActive !== undefined ? Boolean(req.body.isActive) : undefined,
+      isFeatured: req.body.isFeatured !== undefined ? Boolean(req.body.isFeatured) : undefined,
+      isOrganic: req.body.isOrganic !== undefined ? Boolean(req.body.isOrganic) : undefined,
+      isBestseller: req.body.isBestseller !== undefined ? Boolean(req.body.isBestseller) : undefined,
     };
 
     // Remove undefined values
@@ -458,16 +439,16 @@ const updateProduct = async (req, res) => {
       });
     }
 
+    console.log("✅ Product updated:", product._id);
+    console.log("✅ Slug:", product.slug);
+
     res.json({
       success: true,
       message: "Product updated successfully",
-      data: {
-        product,
-      },
+      data: { product },
     });
   } catch (error) {
     console.error("Update product error:", error);
-
     if (error.name === "ValidationError") {
       return res.status(400).json({
         success: false,
@@ -530,12 +511,8 @@ const toggleProductStatus = async (req, res) => {
 
     res.json({
       success: true,
-      message: `Product ${
-        product.isActive ? "activated" : "deactivated"
-      } successfully`,
-      data: {
-        product,
-      },
+      message: `Product ${product.isActive ? "activated" : "deactivated"} successfully`,
+      data: { product },
     });
   } catch (error) {
     console.error("Toggle product status error:", error);
@@ -583,10 +560,7 @@ const addReview = async (req, res) => {
     });
 
     // Update ratings
-    const totalRating = product.ratings.reviews.reduce(
-      (sum, review) => sum + review.rating,
-      0
-    );
+    const totalRating = product.ratings.reviews.reduce((sum, review) => sum + review.rating, 0);
     product.ratings.average = totalRating / product.ratings.reviews.length;
     product.ratings.count = product.ratings.reviews.length;
 
@@ -612,9 +586,7 @@ const addReview = async (req, res) => {
 // Get product reviews
 const getProductReviews = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id)
-      .populate("ratings.reviews.user", "name")
-      .select("ratings");
+    const product = await Product.findById(req.params.id).select("ratings");
 
     if (!product) {
       return res.status(404).json({
@@ -646,6 +618,7 @@ module.exports = {
   getCategories,
   searchProducts,
   getBestsellers,
+  getProductBySlug,
   getProductById,
   createProduct,
   updateProduct,

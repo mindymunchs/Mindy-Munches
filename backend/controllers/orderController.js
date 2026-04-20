@@ -5,8 +5,7 @@ const Product = require('../models/Product');
 const emailService = require('../services/emailService');
 const User = require('../models/User');
 
-
-// Create new order
+// Create order
 const createOrder = async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -18,7 +17,7 @@ const createOrder = async (req, res) => {
       });
     }
 
-    const { shippingAddress, paymentMethod, notes } = req.body;
+    const { shippingAddress, paymentMethod, notes, promoCode } = req.body;
 
     // Get user's cart
     const cart = await Cart.findOne({ user: req.user._id })
@@ -50,9 +49,32 @@ const createOrder = async (req, res) => {
 
     // Calculate order totals
     const subtotal = cart.totalAmount;
-    const shippingCost = subtotal > 500 ? 0 : 50; // Free shipping above ₹500
-    //const tax = Math.round(subtotal * 0.18); // 18% GST
-    const totalAmount = subtotal + shippingCost;
+    const shippingCost = subtotal > 500 ? 0 : 50;
+
+    // ✅ Handle promo code discount
+    let discount = 0;
+    let promoCodeData = null;
+    
+    if (promoCode && promoCode.code) {
+      const PromoCode = require('../models/PromoCode');
+      const promo = await PromoCode.findOne({ code: promoCode.code.toUpperCase() });
+      
+      if (promo && promo.isValid()) {
+        discount = promo.calculateDiscount(subtotal);
+        promoCodeData = {
+          code: promo.code,
+          discount: discount
+        };
+        
+        promo.usageCount += 1;
+        if (req.user) {
+          promo.usedBy.push({ user: req.user._id });
+        }
+        await promo.save();
+      }
+    }
+
+    const totalAmount = subtotal + shippingCost - discount;
 
     // Create order items
     const orderItems = cart.items.map(item => ({
@@ -71,30 +93,41 @@ const createOrder = async (req, res) => {
       paymentMethod,
       subtotal,
       shippingCost,
+      promoCode: promoCodeData,
       totalAmount,
       notes,
-      estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days from now
+      estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     });
 
     await order.save();
-    // Send order confirmation email
+
+    // Send emails (customer confirmation + admin alert)
     try {
       const user = await User.findById(req.user._id);
       const orderData = {
         orderId: order._id,
+        orderNumber: order.orderNumber,
         createdAt: order.createdAt,
         items: orderItems,
         totalAmount,
-        shippingAddress
+        shippingAddress,
+        paymentMethod,
+        paymentStatus: order.paymentStatus,
+        user: user
       };
       
+      // Customer confirmation email
       await emailService.sendOrderConfirmation(user.email, orderData);
       console.log(`✅ Order confirmation email sent to ${user.email}`);
+      
+      // Admin alert email
+      await emailService.sendAdminOrderAlert(orderData);
+      console.log(`✅ Admin alert email sent`);
+      
     } catch (emailError) {
-      console.error('❌ Failed to send order confirmation email:', emailError);
+      console.error('❌ Failed to send emails:', emailError);
       // Don't fail the order if email fails
     }
-
 
     // Update product stock
     for (const item of cart.items) {
@@ -110,10 +143,9 @@ const createOrder = async (req, res) => {
     res.status(201).json({
       success: true,
       message: 'Order created successfully',
-      data: {
-        order
-      }
+      data: { order }
     });
+
   } catch (error) {
     console.error('Create order error:', error);
     res.status(500).json({
@@ -157,6 +189,7 @@ const getUserOrders = async (req, res) => {
         }
       }
     });
+
   } catch (error) {
     console.error('Get user orders error:', error);
     res.status(500).json({
@@ -181,7 +214,6 @@ const getOrderById = async (req, res) => {
       });
     }
 
-    // Check if user owns the order or is admin
     if (order.user._id.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
@@ -191,10 +223,9 @@ const getOrderById = async (req, res) => {
 
     res.json({
       success: true,
-      data: {
-        order
-      }
+      data: { order }
     });
+
   } catch (error) {
     console.error('Get order error:', error);
     res.status(500).json({
@@ -217,7 +248,6 @@ const cancelOrder = async (req, res) => {
       });
     }
 
-    // Check if user owns the order
     if (order.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         success: false,
@@ -225,7 +255,6 @@ const cancelOrder = async (req, res) => {
       });
     }
 
-    // Check if order can be cancelled
     if (!['pending', 'confirmed'].includes(order.orderStatus)) {
       return res.status(400).json({
         success: false,
@@ -233,7 +262,6 @@ const cancelOrder = async (req, res) => {
       });
     }
 
-    // Update order status
     order.orderStatus = 'cancelled';
     await order.save();
 
@@ -248,10 +276,9 @@ const cancelOrder = async (req, res) => {
     res.json({
       success: true,
       message: 'Order cancelled successfully',
-      data: {
-        order
-      }
+      data: { order }
     });
+
   } catch (error) {
     console.error('Cancel order error:', error);
     res.status(500).json({
@@ -314,6 +341,7 @@ const getAllOrders = async (req, res) => {
         }
       }
     });
+
   } catch (error) {
     console.error('Get all orders error:', error);
     res.status(500).json({
@@ -327,10 +355,9 @@ const getAllOrders = async (req, res) => {
 // Update order status (Admin only)
 const updateOrderStatus = async (req, res) => {
   try {
-    const { orderStatus, trackingNumber, note } = req.body; // ✅ FIXED: Use 'orderStatus'
-    
-    const order = await Order.findById(req.params.id);
-    
+    const { orderStatus, trackingNumber, note } = req.body;
+    const order = await Order.findById(req.params.id).populate('user', 'email name');
+
     if (!order) {
       return res.status(404).json({
         success: false,
@@ -338,11 +365,11 @@ const updateOrderStatus = async (req, res) => {
       });
     }
 
-    // Update order
-    if (orderStatus) order.orderStatus = orderStatus; // ✅ FIXED: Use 'orderStatus'
+    const previousStatus = order.orderStatus;
+
+    if (orderStatus) order.orderStatus = orderStatus;
     if (trackingNumber) order.trackingNumber = trackingNumber;
 
-    // Add to status history if needed
     if (note) {
       order.statusHistory = order.statusHistory || [];
       order.statusHistory.push({
@@ -352,13 +379,40 @@ const updateOrderStatus = async (req, res) => {
       });
     }
 
+    if (orderStatus === 'delivered') {
+      order.deliveredAt = new Date();
+    }
+
     await order.save();
+
+    // Send status-change emails (non-blocking)
+    if (orderStatus && orderStatus !== previousStatus && order.user?.email) {
+      if (orderStatus === 'shipped') {
+        emailService.sendShippedNotification(order.user.email, {
+          orderNumber: order.orderNumber,
+          shippingAddress: order.shippingAddress,
+          courierName: order.courierName,
+          estimatedDeliveryDate: order.estimatedDeliveryDate,
+          trackingUrl: order.trackingUrl,
+          trackingNumber: order.trackingNumber
+        }).catch(err => console.error('Shipped email failed:', err));
+      } else if (orderStatus === 'delivered') {
+        emailService.sendDeliveredNotification(order.user.email, {
+          _id: order._id,
+          orderNumber: order.orderNumber,
+          shippingAddress: order.shippingAddress,
+          totalAmount: order.totalAmount,
+          deliveredAt: order.deliveredAt
+        }).catch(err => console.error('Delivered email failed:', err));
+      }
+    }
 
     res.json({
       success: true,
       message: 'Order status updated successfully',
       data: { order }
     });
+
   } catch (error) {
     console.error('Update order status error:', error);
     res.status(500).json({
@@ -368,7 +422,6 @@ const updateOrderStatus = async (req, res) => {
     });
   }
 };
-
 
 // Get order analytics (Admin only)
 const getOrderAnalytics = async (req, res) => {
@@ -419,6 +472,7 @@ const getOrderAnalytics = async (req, res) => {
         period: `${days} days`
       }
     });
+
   } catch (error) {
     console.error('Get order analytics error:', error);
     res.status(500).json({
@@ -438,3 +492,5 @@ module.exports = {
   updateOrderStatus,
   getOrderAnalytics
 };
+
+

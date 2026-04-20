@@ -4,12 +4,16 @@ import { motion } from "framer-motion";
 import useCartStore from "../store/cartStore";
 import useAuthStore from "../store/authStore";
 import CheckoutSuccess from "../components/CheckoutSuccess";
+import PromoCodeInput from '../components/PromoCodeInput'; 
 import { formatPrice, formatPriceForRazorpay } from "../utils/priceUtils";
 
 const Checkout = () => {
   const navigate = useNavigate();
   const { items, getTotal, getItemCount, clearCart } = useCartStore();
   const { isAuthenticated, user } = useAuthStore();
+
+  // ✅ NEW: Promo code state
+  const [appliedPromo, setAppliedPromo] = useState(null);
 
   const [orderData, setOrderData] = useState({
     name: user?.name || "",
@@ -54,20 +58,16 @@ const Checkout = () => {
     const loadRazorpayScript = () => {
       return new Promise((resolve) => {
         if (window.Razorpay) {
-          //console.log("✅ Razorpay script already loaded");
           resolve(true);
           return;
         }
 
-        //console.log("📦 Loading Razorpay script...");
         const script = document.createElement("script");
         script.src = "https://checkout.razorpay.com/v1/checkout.js";
         script.onload = () => {
-          //console.log("✅ Razorpay script loaded successfully");
           resolve(true);
         };
         script.onerror = () => {
-          //console.error("❌ Failed to load Razorpay script");
           resolve(false);
         };
         document.body.appendChild(script);
@@ -77,17 +77,11 @@ const Checkout = () => {
     loadRazorpayScript();
   }, []);
 
-  // Calculate totals consistently
+  // ✅ UPDATED: Calculate totals with promo code discount
   const subtotal = getTotal();
   const shipping = subtotal >= 500 ? 0 : 50;
-  const finalTotal = subtotal + shipping;
-
-  // console.log("🧮 Checkout calculations:", { 
-  //   subtotal, 
-  //   shipping, 
-  //   finalTotal,
-  //   items: items.length 
-  // });
+  const discount = appliedPromo ? appliedPromo.discount : 0;
+  const finalTotal = subtotal + shipping - discount;
 
   // Indian states and union territories
   const indianStates = [
@@ -154,11 +148,6 @@ const Checkout = () => {
   const handleRazorpayPayment = (razorpayOrderId) => {
     return new Promise((resolve, reject) => {
       const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_RIgXHSN9Xwq7U9";
-      // console.log("🔑 Razorpay Key Check:", {
-      //   keyExists: !!razorpayKey,
-      //   keyFormat: razorpayKey?.startsWith('rzp_'),
-      //   keyLength: razorpayKey?.length
-      // });
 
       if (!razorpayKey) {
         reject(new Error("Razorpay key not configured"));
@@ -173,7 +162,6 @@ const Checkout = () => {
         description: "Order Payment",
         order_id: razorpayOrderId,
         handler: function (response) {
-          //console.log("✅ Razorpay payment successful:", response);
           resolve(response);
         },
         prefill: {
@@ -186,7 +174,6 @@ const Checkout = () => {
         },
         modal: {
           ondismiss: function () {
-            //console.log("❌ Payment cancelled by user");
             reject(new Error("Payment cancelled by user"));
           },
         },
@@ -201,14 +188,13 @@ const Checkout = () => {
     });
   };
 
+  // ✅ UPDATED: handlePlaceOrder with promo code
   const handlePlaceOrder = async () => {
     if (!validateForm()) return;
 
     setIsProcessing(true);
 
     try {
-      //console.log("🚀 Starting order process with total:", finalTotal);
-
       // Step 1: Create Razorpay order
       const orderResponse = await fetch(
         `${import.meta.env.VITE_API_URL}/payments/create-razorpay-order`,
@@ -235,12 +221,11 @@ const Checkout = () => {
       if (!orderResponse.ok) throw new Error("Failed to create order");
 
       const { id: razorpayOrderId } = await orderResponse.json();
-      //console.log("✅ Razorpay order created:", razorpayOrderId);
 
       // Step 2: Handle Razorpay payment
       const paymentResponse = await handleRazorpayPayment(razorpayOrderId);
 
-      // Step 3: Verify payment and create order
+      // Step 3: Verify payment and create order with promo code
       const verifyResponse = await fetch(
         `${import.meta.env.VITE_API_URL}/payments/verify-payment`,
         {
@@ -264,6 +249,11 @@ const Checkout = () => {
               subtotal: subtotal,
               shipping: shipping,
               totalAmount: finalTotal,
+              // ✅ NEW: Include promo code
+              promoCode: appliedPromo ? {
+                code: appliedPromo.code,
+                discount: appliedPromo.discount
+              } : null
             },
           }),
         }
@@ -272,28 +262,27 @@ const Checkout = () => {
       const result = await verifyResponse.json();
 
       if (result.success) {
-        // console.log("✅ Order completed successfully:", {
-        //   orderNumber: result.orderNumber,
-        //   totalAmount: result.totalAmount,
-        //   frontendCalculatedTotal: finalTotal
-        // });
-        
-        // CRITICAL: Store total BEFORE clearing cart
+        // Store total BEFORE clearing cart
         const correctTotal = result.totalAmount || finalTotal;
         setCompletedOrderTotal(correctTotal);
         
-        clearCart(); // This makes finalTotal become 50
+        clearCart();
         setOrderId(result.orderNumber);
         setShowSuccess(true);
       } else {
         throw new Error(result.message || "Order verification failed");
       }
     } catch (error) {
-      //console.error("❌ Order placement failed:", error);
+      console.error("❌ Order placement failed:", error);
       alert(`Order failed: ${error.message}`);
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  // ✅ NEW: Promo code handler
+  const handlePromoApply = (promoData) => {
+    setAppliedPromo(promoData);
   };
 
   // Show success page with correct total
@@ -527,6 +516,14 @@ const Checkout = () => {
                 ))}
               </div>
 
+              {/* ✅ NEW: Promo Code Input */}
+              <div className="mb-4">
+                <PromoCodeInput 
+                  subtotal={subtotal} 
+                  onApply={handlePromoApply} 
+                />
+              </div>
+
               {/* Price Breakdown */}
               <div className="space-y-2 border-t border-neutral-200 pt-4">
                 <div className="flex justify-between text-sm">
@@ -543,6 +540,13 @@ const Checkout = () => {
                     )}
                   </span>
                 </div>
+                {/* ✅ NEW: Show discount if promo applied */}
+                {appliedPromo && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>Discount ({appliedPromo.code})</span>
+                    <span className="font-medium">-{formatPrice(discount)}</span>
+                  </div>
+                )}
                 <div className="border-t border-neutral-200 pt-2">
                   <div className="flex justify-between">
                     <span className="text-lg font-semibold text-neutral-800">Total</span>
