@@ -190,7 +190,7 @@ const Footer = () => {
               <Link to="/" className="flex items-center justify-center space-x-3">
                 <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-lg flex items-center justify-center">
                   <img
-                    src="/mindy-munchs-logo.png"
+                    src="/Mindy%20_Munchs_Logo-01_ver-2.png"
                     alt="Mindy Munchs Logo"
                     className="w-full h-full object-contain"
                   />

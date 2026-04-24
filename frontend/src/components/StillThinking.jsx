@@ -8,7 +8,7 @@ const faqs = [
   },
   {
     q: "Does it really work or is it just hype?",
-    a: "Sattu has powered Indian athletes and farmers for centuries — we just optimised it with clinical-grade electrolytes and Omega-3. The results speak: 4.8★ across 10,000+ orders.",
+    a: "Chana Sattu is generally safe and actually quite well suited for sustained energy with no crash. It's a whole food rich in protein, fibre which supports digestion and gut health, and essential minerals. Game Up isn't just Sattu — it's fixed Sattu's limitations and amplified its benefits. A heavy traditional drink turned into a functional, office-friendly energy solution.",
   },
   {
     q: "How is it different from Red Bull or energy drinks?",
@@ -24,7 +24,7 @@ const faqs = [
   },
   {
     q: "What does it taste like?",
-    a: "Two flavours: Jaljira (tangy, refreshing, great cold) and Masala (bold, warming, great any time). Most people try both and stick with both.",
+    a: "Two flavours: Jaljira — refreshing and tangy, great served cold. Masala — bold and warming, great any time. More flavours like Coffee are coming soon.",
   },
 ];
 
