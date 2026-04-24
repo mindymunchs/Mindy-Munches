@@ -38,8 +38,8 @@ const FinalCTA = () => (
           viewport={{ once: true }}
           transition={{ duration: 0.55, ease: "easeOut", delay: 0.25 }}
         >
-          Sustained energy. Deep hydration. Mental clarity. Everything you need
-          to perform at your peak — in one clean formula.
+          Sustained Energy. Naturally Hydrating. No Sugar Spike. Everything you
+          need to perform at your peak — in one clean formula.
         </motion.p>
 
         <motion.div

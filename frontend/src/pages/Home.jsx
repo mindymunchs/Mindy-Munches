@@ -30,10 +30,50 @@ const Home = () => {
 
   const { testimonials: videoTestimonials, loading: videoLoading } = useVideoTestimonials();
 
+  // Lock body scroll + close on Escape while the video modal is open
+  useEffect(() => {
+    if (!activeVideo) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e) => {
+      if (e.key === "Escape") setActiveVideo(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [activeVideo]);
+
+  const isEmbeddedVideo = (src = "") =>
+    /youtube\.com|youtu\.be|vimeo\.com|player\./i.test(src);
+
+  const activeVideoIndex = activeVideo
+    ? videoTestimonials.findIndex((t) => (t.id ?? t) === (activeVideo.id ?? activeVideo))
+    : -1;
+
+  const goToVideo = (offset) => {
+    if (!videoTestimonials.length) return;
+    const nextIdx =
+      (activeVideoIndex + offset + videoTestimonials.length) % videoTestimonials.length;
+    setActiveVideo(videoTestimonials[nextIdx]);
+  };
+
+  useEffect(() => {
+    if (!activeVideo) return;
+    const onArrow = (e) => {
+      if (e.key === "ArrowRight") goToVideo(1);
+      else if (e.key === "ArrowLeft") goToVideo(-1);
+    };
+    window.addEventListener("keydown", onArrow);
+    return () => window.removeEventListener("keydown", onArrow);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeVideo, videoTestimonials]);
+
   // scrollRef for testimonial sections
   const scrollRef = useRef(null);
+  const bestsellerScrollRef = useRef(null);
   const videoScrollRef = useRef(null);
-  const videoTestimonialsRef = useRef(null);
 
   // USP Data - 3 E's
   const uspData = [
@@ -183,10 +223,10 @@ const Home = () => {
             transition={{ duration: 0.5, ease: "easeOut" }}
           >
             <p className="text-xs uppercase tracking-[0.2em] font-semibold text-[#4ade80] mb-3">
-              Clean Performance Fuel
+              Daily Performance Fuel
             </p>
             <h2 className="font-heading font-bold text-neutral-900 mb-4">
-              Shop Game Up
+              Daily Performance Fuel Shop
             </h2>
             <p className="font-sans text-base text-neutral-600 max-w-xl mx-auto">
               Real ingredients. Real results. No shortcuts.
@@ -197,9 +237,12 @@ const Home = () => {
             <Loader text="Loading bestsellers..." />
           ) : (
             <div className="relative">
+              {/* Fade edges */}
+              <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent z-20" />
+              <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent z-20" />
               {/* Horizontal Scrollable Container - 4 Cards Fully Visible */}
               <div
-                id="bestseller-scroll"
+                ref={bestsellerScrollRef}
                 className="flex gap-6 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory"
                 style={{
                   WebkitOverflowScrolling: "touch",
@@ -227,15 +270,14 @@ const Home = () => {
 
               {/* Navigation Arrows */}
               <button
-                className="absolute top-1/2 -left-4 z-30 -translate-y-1/2 bg-white rounded-full shadow-lg p-3 hover:bg-gray-100 transition-colors duration-200"
+                className="absolute top-1/2 -left-4 z-30 -translate-y-1/2 bg-white rounded-full shadow-lg p-3 hover:bg-gray-50 hover:scale-105 hover:shadow-xl transition-all duration-200"
                 aria-label="Scroll Left"
                 onClick={() => {
-                  const container =
-                    document.getElementById("bestseller-scroll");
+                  const container = bestsellerScrollRef.current;
+                  if (!container) return;
                   const cardWidth = container.scrollWidth / bestsellers.length;
-                  const scrollAmount = cardWidth * 1; // Scroll by exactly 1 card width
                   container.scrollBy({
-                    left: -scrollAmount,
+                    left: -cardWidth,
                     behavior: "smooth",
                   });
                 }}
@@ -256,15 +298,14 @@ const Home = () => {
               </button>
 
               <button
-                className="absolute top-1/2 -right-4 z-30 -translate-y-1/2 bg-white rounded-full shadow-lg p-3 hover:bg-gray-100 transition-colors duration-200"
+                className="absolute top-1/2 -right-4 z-30 -translate-y-1/2 bg-white rounded-full shadow-lg p-3 hover:bg-gray-50 hover:scale-105 hover:shadow-xl transition-all duration-200"
                 aria-label="Scroll Right"
                 onClick={() => {
-                  const container =
-                    document.getElementById("bestseller-scroll");
+                  const container = bestsellerScrollRef.current;
+                  if (!container) return;
                   const cardWidth = container.scrollWidth / bestsellers.length;
-                  const scrollAmount = cardWidth * 1; // Scroll by exactly 1 card width
                   container.scrollBy({
-                    left: scrollAmount,
+                    left: cardWidth,
                     behavior: "smooth",
                   });
                 }}
@@ -300,309 +341,8 @@ const Home = () => {
         </div>
       </section>
 
-      {/*
-        SECTION HIDDEN — Brand Story (Mindy Munchs generic)
-        Uncomment to restore. Currently off-brand for Game Up
-        focused landing. Client may want this on About page instead.
-        Note: The Our Brand USP / 3 E's block (previously nested inside
-        this section) has been extracted as a standalone section below.
-
-        <section className="py-12 md:py-20 bg-gradient-to-br from-orange-50 via-yellow-50 to-orange-100 overflow-x-hidden overflow-y-hidden">
-          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-5xl mx-auto text-center">
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8 }}
-                viewport={{ once: true }}
-              >
-                <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-heading font-bold text-neutral-800 leading-tight whitespace-nowrap mb-10">
-                  Revive{" "}
-                  <span className="text-primary-500">Wholesome Snacks</span> for
-                  Modern Convenience
-                </h1>
-              </motion.div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16 items-stretch content-stretch">
-              <div className="h-full">
-                <p className="text-base md:text-lg lg:text-xl text-neutral-600 mb-6 leading-relaxed max-w-3xl">
-                  Snacking shouldn't come with guilt. That's why at Mindy Munchs,
-                  we craft bites that are as quick to reach for as your go-to
-                  packet — only smarter, tastier, and way better for you. Health
-                  should feel personal, playful and rooted in our everyday lives.
-                </p>
-                <br></br>
-                <div className="flex flex-wrap sm:flex-nowrap items-center justify-center sm:justify-start gap-2 sm:gap-3 md:gap-3 mb-8 px-2 sm:px-0 overflow-x-visible sm:overflow-x-clip">
-                  {["Snack Boldly", "Snack Mindfully", "Snack your way"].map(
-                    (cert, index) => (
-                      <motion.div
-                        key={cert}
-                        className="bg-white/80 backdrop-blur-sm px-3 py-2 sm:px-4 sm:py-2 md:px-5 md:py-2.5 rounded-lg shadow-sm flex items-center gap-1 sm:gap-2 flex-none whitespace-nowrap"
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: index * 0.1 }}
-                        viewport={{ once: true }}
-                      >
-                        <span className="text-green-500 text-base sm:text-lg leading-none">
-                          ✓
-                        </span>
-                        <span className="text-xs sm:text-sm md:text-base font-medium text-neutral-700 leading-none">
-                          {cert}
-                        </span>
-                      </motion.div>
-                    )
-                  )}
-                </div>
-                <br></br>
-
-                <motion.div
-                  className="relative w-full h-full"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.8, delay: 0.2 }}
-                  viewport={{ once: true }}
-                >
-                  <div className="bg-white/60 backdrop-blur-sm rounded-2xl md:rounded-3xl p-6 md:p-8 shadow-lg border border-white/20">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-                      <div className="text-center">
-                        <div className="w-16 h-16 md:w-20 md:h-20 bg-primary-100 rounded-full flex items-center justify-center mb-4 mx-auto">
-                          <span className="text-2xl md:text-3xl">🌱</span>
-                        </div>
-                        <h3 className="font-semibold text-neutral-800 mb-2 text-sm md:text-base">
-                          Rooted in Tradition
-                        </h3>
-                        <p className="text-xs md:text-sm text-neutral-600">
-                          Ancient superfoods, modern formats
-                        </p>
-                      </div>
-
-                      <div className="text-center">
-                        <div className="w-16 h-16 md:w-20 md:h-20 bg-primary-100 rounded-full flex items-center justify-center mb-4 mx-auto">
-                          <span className="text-2xl md:text-3xl">💪</span>
-                        </div>
-                        <h3 className="font-semibold text-neutral-800 mb-2 text-sm md:text-base">
-                          Nutrition First
-                        </h3>
-                        <p className="text-xs md:text-sm text-neutral-600">
-                          High protein, clean ingredients
-                        </p>
-                      </div>
-
-                      <div className="text-center">
-                        <div className="w-16 h-16 md:w-20 md:h-20 bg-primary-100 rounded-full flex items-center justify-center mb-4 mx-auto">
-                          <span className="text-2xl md:text-3xl">❤️</span>
-                        </div>
-                        <h3 className="font-semibold text-neutral-800 mb-2 text-sm md:text-base">
-                          Family-Crafted
-                        </h3>
-                        <p className="text-xs md:text-sm text-neutral-600">
-                          Born from real kitchen experiments
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              </div>
-
-              <div className="relative h-full">
-                <motion.div
-                  initial={{ opacity: 0, x: 30 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.8, delay: 0.15 }}
-                  viewport={{ once: true }}
-                  className="w-full h-full"
-                >
-                  <img
-                    src="/Home2.png"
-                    alt="Creative brand mock"
-                    className="w-full h-9/10 object-cover md:object-contain rounded-2xl md:rounded-3xl"
-                    loading="lazy"
-                  />
-                </motion.div>
-              </div>
-            </div>
-          </div>
-        </section>
-      */}
-
-      {/*
-        SECTION HIDDEN — YouTube Heritage Video
-        Uncomment to restore. Breaks Game Up narrative flow.
-        Good candidate for About Us or Our Story page.
-
-        <section
-          id="our-story"
-          className="py-8 md:py-20 bg-gradient-to-br from-orange-50 via-yellow-50 to-orange-100 overflow-x-hidden"
-        >
-          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-6xl mx-auto">
-              <motion.div
-                className="text-center "
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                viewport={{ once: true }}
-              >
-                <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-heading font-bold text-neutral-800 mb-6 leading-tight whitespace-nowrap">
-                  We Are Preserving a Heritage of{" "}
-                  <span className="text-primary-500">
-                    Traditional Indian SuperFoods
-                  </span>
-                </h1>
-              </motion.div>
-
-              <div className="flex justify-center items-center max-h-screen px-4">
-                <motion.div
-                  className="w-full max-w-[70vw] md:max-w-[75vw] lg:max-w-[80vw]"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.6 }}
-                  viewport={{ once: true }}
-                >
-                  <div className="relative w-full h-[78vh] bg-gray-900 rounded-lg overflow-hidden shadow-2xl">
-                    <iframe
-                      width="100%"
-                      height="100%"
-                      src="https://www.youtube.com/embed/tIxV269IutY"
-                      title="From The Soil Of India"
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                      allowFullScreen
-                      className="absolute inset-0 w-full h-full"
-                    ></iframe>
-                  </div>
-                </motion.div>
-              </div>
-            </div>
-          </div>
-        </section>
-      */}
-
-      {/*
-        SECTION HIDDEN — Traditional Superfoods grid
-        Uncomment to restore. Duplicate product grid —
-        redundant alongside Bestsellers on Game Up landing.
-
-        <section className="py-16 px-2 md:py-20 bg-neutral-50 overflow-hidden">
-          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.div
-              className="text-center mb-12"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-heading font-bold text-primary-500 mb-4">
-                Traditional Superfoods
-              </h2>
-            </motion.div>
-
-            {loading ? (
-              <Loader text="Loading products..." />
-            ) : (
-              <div className="relative">
-                <div
-                  id="product-scroll"
-                  className="flex gap-6 pc-2 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory"
-                  style={{
-                    WebkitOverflowScrolling: "touch",
-                    scrollPaddingLeft: "1.5rem",
-                    scrollPaddingRight: "1.5rem",
-                  }}
-                >
-                  {products.map((product, index) => (
-                    <div
-                      key={product.id}
-                      className="flex-shrink-0 snap-start"
-                      style={{
-                        width: "calc(25% - 18px)",
-                        minWidth: "280px",
-                      }}
-                    >
-                      <ProductCard product={product} index={index} />
-                    </div>
-                  ))}
-                </div>
-
-                <button
-                  className="absolute top-1/2 -left-4 z-30 -translate-y-1/2 bg-white rounded-full shadow-lg p-3 hover:bg-gray-100 transition-colors duration-200"
-                  aria-label="Scroll Left"
-                  onClick={() => {
-                    const container = document.getElementById("product-scroll");
-                    const cardWidth = container.scrollWidth / products.length;
-                    const scrollAmount = cardWidth * 1;
-                    container.scrollBy({
-                      left: -scrollAmount,
-                      behavior: "smooth",
-                    });
-                  }}
-                >
-                  <svg
-                    className="w-5 h-5 text-gray-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M15 19l-7-7 7-7"
-                    />
-                  </svg>
-                </button>
-
-                <button
-                  className="absolute top-1/2 -right-4 z-30 -translate-y-1/2 bg-white rounded-full shadow-lg p-3 hover:bg-gray-100 transition-colors duration-200"
-                  aria-label="Scroll Right"
-                  onClick={() => {
-                    const container = document.getElementById("product-scroll");
-                    const cardWidth = container.scrollWidth / products.length;
-                    const scrollAmount = cardWidth * 1;
-                    container.scrollBy({
-                      left: scrollAmount,
-                      behavior: "smooth",
-                    });
-                  }}
-                >
-                  <svg
-                    className="w-5 h-5 text-gray-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </button>
-              </div>
-            )}
-
-            <motion.div
-              className="text-center mt-12"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              viewport={{ once: true }}
-            >
-              <Link to="/products" className="btn-primary">
-                Shop All Products
-              </Link>
-            </motion.div>
-          </div>
-        </section>
-      */}
-
       {/* Our Customers Experience / Testimonials Section */}
-      <section
-        ref={videoTestimonialsRef}
-        className="py-20 md:py-24 bg-white overflow-x-hidden"
-      >
+      <section className="py-20 md:py-24 bg-white overflow-x-hidden">
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             className="text-center mb-12"
@@ -724,59 +464,12 @@ const Home = () => {
               </svg>
             </div>
           </div>
-
-
-          {/* Trust Indicators */}
-          {/* <motion.div
-            className="text-center"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            viewport={{ once: true }}
-          > */}
-            {/* Marketing copy — update manually when stats change */}
-            {/* <div className="flex flex-wrap justify-center items-center gap-4 md:gap-8 text-neutral-600">
-              <div className="flex items-center bg-white rounded-lg px-4 md:px-6 py-3 shadow-sm">
-                <span className="text-xl md:text-2xl mr-2 md:mr-3">⭐</span>
-                <div>
-                  <span className="font-semibold text-base md:text-lg">
-                    4.9/5
-                  </span>
-                  <span className="ml-2 text-xs md:text-sm">
-                    Average Rating
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center bg-white rounded-lg px-4 md:px-6 py-3 shadow-sm">
-                <span className="text-xl md:text-2xl mr-2 md:mr-3">📦</span>
-                <div>
-                  <span className="font-semibold text-base md:text-lg">
-                    500+
-                  </span>
-                  <span className="ml-2 text-xs md:text-sm">
-                    Happy Customers
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center bg-white rounded-lg px-4 md:px-6 py-3 shadow-sm">
-                <span className="text-xl md:text-2xl mr-2 md:mr-3">✅</span>
-                <div>
-                  <span className="font-semibold text-base md:text-lg">
-                    98%
-                  </span>
-                  <span className="ml-2 text-xs md:text-sm">
-                    Would Recommend
-                  </span>
-                </div>
-              </div>
-            </div> */}
-          {/* </motion.div> */}
         </div>
       </section>
 
-      {/* Video Testimonials */}
-      {!videoLoading && videoTestimonials.length > 0 && (
-        <section className="bg-gradient-to-br from-orange-50 via-yellow-50 to-orange-100 py-20 md:py-24 overflow-hidden">
+      {/* Video Testimonials — Watch Their Stories */}
+      {(videoLoading || videoTestimonials.length > 0) && (
+        <section className="relative bg-gradient-to-br from-orange-50 via-yellow-50 to-orange-100 py-20 md:py-24 overflow-hidden">
           <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
               className="text-center mb-12"
@@ -796,66 +489,204 @@ const Home = () => {
               </p>
             </motion.div>
 
-            <div className="relative">
-              <button
-                onClick={() => videoScrollRef.current?.scrollBy({ left: -300, behavior: "smooth" })}
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 hidden md:flex bg-white hover:bg-neutral-50 rounded-full shadow-lg p-3 transition-all duration-200 hover:scale-105 items-center justify-center"
-                aria-label="Scroll left"
-              >
-                <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
+            {videoLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader text="Loading stories…" />
+              </div>
+            ) : (
+              <div className="relative">
+                {/* Fade edges for scroll discoverability */}
+                <div className="pointer-events-none absolute inset-y-0 left-0 w-12 z-10 bg-gradient-to-r from-orange-50 to-transparent hidden md:block" />
+                <div className="pointer-events-none absolute inset-y-0 right-0 w-12 z-10 bg-gradient-to-l from-orange-100 to-transparent hidden md:block" />
 
-              <div
-                ref={videoScrollRef}
-                className="flex gap-4 overflow-x-auto scrollbar-hide md:px-10 py-4"
-                style={{ scrollbarWidth: "none", msOverflowStyle: "none", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}
+                <button
+                  onClick={() => videoScrollRef.current?.scrollBy({ left: -300, behavior: "smooth" })}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 z-20 hidden md:flex bg-white hover:bg-neutral-50 rounded-full shadow-lg p-3 transition-all duration-200 hover:scale-105 items-center justify-center"
+                  aria-label="Scroll left"
+                >
+                  <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+
+                <div
+                  ref={videoScrollRef}
+                  className="flex gap-4 overflow-x-auto scrollbar-hide md:px-14 py-4"
+                  style={{ scrollbarWidth: "none", msOverflowStyle: "none", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}
+                >
+                  {videoTestimonials.map((testimonial, idx) => (
+                    <motion.button
+                      type="button"
+                      key={testimonial.id ?? idx}
+                      className="flex-shrink-0 w-44 sm:w-52 md:w-56 aspect-[9/16] rounded-2xl overflow-hidden shadow-lg cursor-pointer group relative bg-neutral-200 text-left focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                      style={{ scrollSnapAlign: "start" }}
+                      onClick={() => setActiveVideo(testimonial)}
+                      initial={{ opacity: 0, y: 24 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: "-40px" }}
+                      transition={{ duration: 0.4, delay: idx * 0.05 }}
+                      aria-label={`Play ${testimonial.name} testimonial`}
+                    >
+                      {testimonial.thumbnail ? (
+                        <img
+                          src={testimonial.thumbnail}
+                          alt=""
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                          onError={(e) => { e.currentTarget.style.display = "none"; }}
+                        />
+                      ) : testimonial.videoSrc && !isEmbeddedVideo(testimonial.videoSrc) ? (
+                        <video
+                          src={testimonial.videoSrc}
+                          className="w-full h-full object-cover"
+                          preload="metadata"
+                          muted
+                          playsInline
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-primary-200 to-primary-400 flex items-center justify-center text-white font-heading text-4xl">
+                          {testimonial.name?.charAt(0) ?? "•"}
+                        </div>
+                      )}
+
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                          <svg className="w-5 h-5 text-primary-600 ml-1" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        </div>
+                      </div>
+
+                      {testimonial.duration && (
+                        <span className="absolute top-3 right-3 bg-black/60 text-white text-[10px] font-sans px-2 py-0.5 rounded-full backdrop-blur-sm">
+                          {testimonial.duration}
+                        </span>
+                      )}
+
+                      <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                        <p className="font-heading font-semibold text-sm truncate">{testimonial.name}</p>
+                        {testimonial.location && (
+                          <p className="font-sans text-xs text-white/75 truncate">{testimonial.location}</p>
+                        )}
+                        {testimonial.rating > 0 && (
+                          <div className="flex items-center gap-0.5 mt-1" aria-label={`${testimonial.rating} star rating`}>
+                            {[...Array(Math.min(5, Math.round(testimonial.rating)))].map((_, i) => (
+                              <span key={i} className="text-yellow-400 text-xs leading-none">★</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </motion.button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => videoScrollRef.current?.scrollBy({ left: 300, behavior: "smooth" })}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-20 hidden md:flex bg-white hover:bg-neutral-50 rounded-full shadow-lg p-3 transition-all duration-200 hover:scale-105 items-center justify-center"
+                  aria-label="Scroll right"
+                >
+                  <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* In-section video overlay */}
+          <AnimatePresence>
+            {activeVideo && (
+              <motion.div
+                className="absolute inset-0 z-30 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 md:p-8"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                onClick={() => setActiveVideo(null)}
               >
-                {videoTestimonials.map((testimonial) => (
-                  <div
-                    key={testimonial.id}
-                    className="flex-shrink-0 w-44 sm:w-52 md:w-56 aspect-[9/16] rounded-2xl overflow-hidden shadow-lg cursor-pointer group relative"
-                    style={{ scrollSnapAlign: "start" }}
-                    onClick={() => setActiveVideo(testimonial)}
+                {videoTestimonials.length > 1 && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); goToVideo(-1); }}
+                    className="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 z-40 w-11 h-11 md:w-12 md:h-12 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center text-neutral-700 transition-all hover:scale-105"
+                    aria-label="Previous video"
                   >
-                    {testimonial.thumbnail ? (
-                      <img
-                        src={testimonial.thumbnail}
-                        alt={`${testimonial.name} testimonial`}
-                        className="w-full h-full object-cover"
-                        onError={(e) => { e.target.style.display = "none"; }}
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                )}
+
+                {videoTestimonials.length > 1 && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); goToVideo(1); }}
+                    className="absolute right-2 md:right-6 top-1/2 -translate-y-1/2 z-40 w-11 h-11 md:w-12 md:h-12 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center text-neutral-700 transition-all hover:scale-105"
+                    aria-label="Next video"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                )}
+
+                <motion.div
+                  key={activeVideo.id ?? activeVideoIndex}
+                  className="relative w-full max-w-3xl bg-white rounded-2xl overflow-hidden shadow-2xl"
+                  initial={{ scale: 0.92, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.92, opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    onClick={() => setActiveVideo(null)}
+                    className="absolute top-3 right-3 z-10 w-9 h-9 bg-white/90 hover:bg-white rounded-full shadow flex items-center justify-center text-neutral-700 transition-colors"
+                    aria-label="Close video"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+
+                  <div className="aspect-video bg-black">
+                    {isEmbeddedVideo(activeVideo.videoSrc) ? (
+                      <iframe
+                        src={activeVideo.videoSrc}
+                        title={`${activeVideo.name} testimonial`}
+                        className="w-full h-full"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
                       />
                     ) : (
-                      <video src={testimonial.videoSrc} className="w-full h-full object-cover" preload="metadata" />
+                      <video
+                        src={activeVideo.videoSrc}
+                        className="w-full h-full object-contain bg-black"
+                        controls
+                        autoPlay
+                        playsInline
+                      >
+                        Your browser does not support the video tag.
+                      </video>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                        <svg className="w-5 h-5 text-primary-600 ml-1" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M8 5v14l11-7z" />
-                        </svg>
-                      </div>
-                    </div>
-                    <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                      <p className="font-heading font-semibold text-sm truncate">{testimonial.name}</p>
-                      <p className="font-sans text-xs text-white/70 truncate">{testimonial.location}</p>
-                    </div>
                   </div>
-                ))}
-              </div>
 
-              <button
-                onClick={() => videoScrollRef.current?.scrollBy({ left: 300, behavior: "smooth" })}
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 hidden md:flex bg-white hover:bg-neutral-50 rounded-full shadow-lg p-3 transition-all duration-200 hover:scale-105 items-center justify-center"
-                aria-label="Scroll right"
-              >
-                <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
-          </div>
+                  <div className="px-5 py-4 border-t border-neutral-200">
+                    <p className="font-heading font-semibold text-sm text-neutral-900">{activeVideo.name}</p>
+                    {activeVideo.location && (
+                      <p className="font-sans text-xs text-neutral-500">{activeVideo.location}</p>
+                    )}
+                    {activeVideo.fullQuote && (
+                      <p className="font-sans text-sm text-neutral-600 italic leading-relaxed mt-2">
+                        &ldquo;{activeVideo.fullQuote}&rdquo;
+                      </p>
+                    )}
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </section>
       )}
 
@@ -890,7 +721,7 @@ const Home = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.2, duration: 0.6 }}
                 viewport={{ once: true }}
-                whileHover={{ y: -3 }}
+                whileHover={{ y: -6, transition: { duration: 0.2 } }}
               >
                 <div className="w-20 h-20 mx-auto mb-4 rounded-full border-2 border-primary-200 bg-primary-50 flex items-center justify-center group-hover:border-primary-400 group-hover:bg-primary-100 transition-all duration-200">
                   <div className="flex items-center justify-center w-full h-full">
@@ -913,63 +744,6 @@ const Home = () => {
       <StillThinking />
       <FinalCTA />
 
-      {/* Video Modal */}
-      <AnimatePresence>
-        {activeVideo && (
-          <motion.div
-            className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setActiveVideo(null)}
-          >
-            <motion.div
-              className="bg-white rounded-2xl overflow-hidden max-w-3xl w-full max-h-[90vh] overflow-y-auto"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 bg-primary-100 rounded-full flex items-center justify-center">
-                    <span className="font-heading font-bold text-primary-700 text-sm">
-                      {activeVideo.name?.charAt(0)}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="font-heading font-semibold text-sm text-neutral-900">{activeVideo.name}</p>
-                    <p className="font-sans text-xs text-neutral-500">{activeVideo.location}</p>
-                  </div>
-                </div>
-                <button onClick={() => setActiveVideo(null)} className="text-neutral-400 hover:text-neutral-700 transition-colors">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <div className="aspect-video">
-                <iframe
-                  src={activeVideo.videoSrc}
-                  title={`${activeVideo.name} testimonial`}
-                  className="w-full h-full"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              </div>
-              {activeVideo.fullQuote && (
-                <div className="px-6 py-5">
-                  <p className="font-sans text-sm text-neutral-600 italic leading-relaxed">
-                    &ldquo;{activeVideo.fullQuote}&rdquo;
-                  </p>
-                </div>
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

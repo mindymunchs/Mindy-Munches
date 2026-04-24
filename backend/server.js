@@ -248,14 +248,33 @@ app.listen(PORT, () => {
     console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
   }
 
-  // Self-ping every 14 minutes to prevent Render cold starts
+  // Warm the MongoDB connection pool on boot so the first real request
+  // doesn't pay connection + pool setup on top of Render's cold start.
+  const warmupDb = async () => {
+    try {
+      if (mongoose.connection.readyState === 1) {
+        await mongoose.connection.db.admin().ping();
+        if (process.env.NODE_ENV !== 'production') {
+          console.log("[db-warmup] ok");
+        }
+      }
+    } catch (err) {
+      console.error("[db-warmup] failed:", err.message);
+    }
+  };
+  warmupDb();
+
+  // Self-ping to keep the Render instance warm while it's running.
+  // NOTE: this only helps *while* the process is alive — it cannot wake a
+  // service that Render has already spun down. Pair with an external pinger
+  // (cron-job.org / UptimeRobot / GitHub Actions) for reliable uptime.
   if (process.env.BACKEND_URL) {
     const https = require("https");
     const http = require("http");
     const pingUrl = `${process.env.BACKEND_URL}/api/health`;
     const client = pingUrl.startsWith("https") ? https : http;
 
-    setInterval(() => {
+    const ping = () => {
       try {
         client.get(pingUrl, (res) => {
           if (process.env.NODE_ENV !== 'production') {
@@ -268,7 +287,11 @@ app.listen(PORT, () => {
       } catch (err) {
         console.error("[health-ping] error:", err.message);
       }
-    }, 14 * 60 * 1000);
+    };
+
+    // Fire once immediately on boot, then every 10 minutes.
+    ping();
+    setInterval(ping, 10 * 60 * 1000);
   }
 });
 

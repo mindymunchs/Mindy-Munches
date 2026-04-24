@@ -19,6 +19,7 @@ const TrustBand = () => (
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.5, ease: "easeOut", delay: i * 0.1 }}
+            whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
           >
             <span className="font-heading font-bold text-white text-xl md:text-2xl leading-none">
               {stat.value}

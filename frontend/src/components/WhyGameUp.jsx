@@ -12,7 +12,7 @@ const cards = [
   },
   {
     title: "Deep Hydration",
-    body: "Electrolyte-rich formula replaces what coffee strips away. Stay sharp, stay hydrated.",
+    body: "Acts as a natural body coolant, regulates body temperature and restores essential electrolytes lost through sweat. Stay sharp, stay hydrated.",
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 2C8.5 7 5 11.5 5 15a7 7 0 0014 0c0-3.5-3.5-8-7-13z" />
@@ -31,7 +31,7 @@ const cards = [
   },
   {
     title: "Workout Ready",
-    body: "Same formula trusted by Star Strikers athletes. From boardroom to gym, seamlessly.",
+    body: "From Boardroom to Gym to Sports — seamlessly. Trusted by Star Strikers athletes.",
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z M5.5 17.5l3-6M15 7.5l3 3" />
@@ -61,8 +61,8 @@ const WhyGameUp = () => (
           Why Game Up?
         </h2>
         <p className="text-base md:text-lg text-neutral-600 max-w-2xl mx-auto leading-relaxed">
-          India's first clean performance drink built for professionals and
-          athletes who refuse to compromise.
+          India's Original Daily Performance Fuel — built for Professionals
+          and Athletes who refuse to compromise.
         </p>
       </motion.div>
 

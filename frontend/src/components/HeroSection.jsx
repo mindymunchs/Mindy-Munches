@@ -7,9 +7,10 @@ const fade = (delay) => ({
 });
 
 const trustChips = [
+  "✓ Endorsed by Nutritionist",
   "✓ FSSAI Certified",
-  "✓ Startup India Recognised",
-  "⚡ Star Strikers Partner",
+  "✓ Official Drinks Partner — Star Strikers Delhi NCR",
+  "✓ NABL Accredited Lab Tested",
 ];
 
 const HeroSection = () => (
@@ -38,9 +39,9 @@ const HeroSection = () => (
         Recommended size: 1920x1080px minimum.
       */}
       <picture>
-        <source media="(max-width: 767px)" srcSet="/MOBILE_BANNER_1_lovable.png" />
+        <source media="(max-width: 767px)" srcSet="/MOBILE_BANNER_1_lovable_ver_2.png" />
         <img
-          src="/banner_1_lovable.png"
+          src="/banner_1_lovable_ver_2.png"
           alt="Mindy Munchs Game Up — Clean Performance Fuel"
           className="absolute inset-0 w-full h-full object-cover object-center"
           loading="eager"
@@ -53,7 +54,7 @@ const HeroSection = () => (
 
     {/* ── Content ─────────────────────────────────────────────────────── */}
     <div className="relative z-10 min-h-[85vh] md:min-h-screen flex items-center">
-      <div className="w-full max-w-7xl mx-auto px-6 py-20 md:py-28">
+      <div className="w-full pl-4 pr-6 md:pl-10 lg:pl-16 xl:pl-24 py-20 md:py-28">
         <div className="grid grid-cols-12">
           <div className="col-span-12 md:col-span-7">
 
@@ -70,7 +71,7 @@ const HeroSection = () => (
               {...fade(0.25)}
               className="font-brand font-bold text-white leading-tight mb-6 text-[clamp(2.5rem,5vw,4.5rem)]"
             >
-              No More<br />4PM Energy Crash.
+              No Crash Energy<br />for Work and Sports.
             </motion.h1>
 
             {/* Subheadline */}
@@ -78,8 +79,7 @@ const HeroSection = () => (
               {...fade(0.4)}
               className="text-lg md:text-xl text-white/75 mb-5 max-w-lg leading-relaxed"
             >
-              Clean performance fuel for your workday, your workout, and
-              everything that needs your focus.
+              Daily Performance Fuel.
             </motion.p>
 
             {/* Proof line */}
@@ -87,7 +87,7 @@ const HeroSection = () => (
               {...fade(0.5)}
               className="text-sm tracking-wide uppercase text-white/55 mb-10"
             >
-              Powered by Sattu · Electrolytes · Omega&nbsp;3
+              Powered by India's Original Superfood · Chana Sattu
             </motion.p>
 
             {/* CTA row */}
@@ -106,14 +106,14 @@ const HeroSection = () => (
                 rel="noopener noreferrer"
                 className="font-heading text-base font-semibold uppercase tracking-wide py-4 px-8 rounded-lg bg-accent-500 hover:bg-accent-400 text-neutral-900 transition-transform duration-200 hover:scale-[1.02] text-center"
               >
-                Beat the Crash Now
+                Chat on WhatsApp
               </a>
 
               <a
                 href="/products"
                 className="font-heading text-base font-semibold uppercase tracking-wide py-4 px-8 rounded-lg border border-white/60 text-white bg-transparent hover:bg-white/10 transition-colors duration-200 text-center"
               >
-                Try Starter Pack @ ₹299
+                Order Trial Kit Now
               </a>
             </motion.div>
 
@@ -131,6 +131,12 @@ const HeroSection = () => (
 
           </div>
           {/* col-span-5 intentionally empty — background image visible through gradient */}
+          {/*
+            ASSET TODO: "Ready under 15 sec" label to be added
+            when sachet product image is placed in right column.
+            Client has requested a product pack image to replace
+            the current background composite.
+          */}
         </div>
       </div>
     </div>
