@@ -39,9 +39,9 @@ const HeroSection = () => (
         Recommended size: 1920x1080px minimum.
       */}
       <picture>
-        <source media="(max-width: 767px)" srcSet="/MOBILE_BANNER_1_lovable_ver_2.png" />
+        <source media="(max-width: 767px)" srcSet="/MOBILE_BANNER_1_lovable_ver_3.png" />
         <img
-          src="/banner_1_lovable_ver_2.png"
+          src="/banner_1_lovable_ver_3.png"
           alt="Mindy Munchs Game Up — Clean Performance Fuel"
           className="absolute inset-0 w-full h-full object-cover object-center"
           loading="eager"
@@ -49,7 +49,7 @@ const HeroSection = () => (
         />
       </picture>
       {/* Dark left-to-transparent gradient keeps text readable without hiding the product image */}
-      <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/70 to-black/30" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/45 to-black/10" />
     </div>
 
     {/* ── Content ─────────────────────────────────────────────────────── */}
@@ -87,7 +87,7 @@ const HeroSection = () => (
               {...fade(0.5)}
               className="text-sm tracking-wide uppercase text-white/55 mb-10"
             >
-              Powered by India's Original Superfood · Chana Sattu
+              Powered by India's Original Superfuel · Chana Sattu
             </motion.p>
 
             {/* CTA row */}

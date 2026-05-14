@@ -3,7 +3,11 @@ import { motion } from "framer-motion";
 const cards = [
   {
     title: "Sustained Energy",
-    body: "No crash. No jitters. Sattu-powered slow-release fuel that keeps you going from 3PM to 8PM.",
+    points: [
+      "No crash. No jitters.",
+      "Sattu-powered slow-release fuel",
+      "Keeps you going from 3PM to 8PM",
+    ],
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -11,8 +15,13 @@ const cards = [
     ),
   },
   {
-    title: "Deep Hydration",
-    body: "Acts as a natural body coolant, regulates body temperature and restores essential electrolytes lost through sweat. Stay sharp, stay hydrated.",
+    title: "Keeps You Hydrated",
+    points: [
+      "Natural body coolant",
+      "Regulates body temperature",
+      "Restores electrolytes lost through sweat",
+      "Stay sharp, stay hydrated",
+    ],
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 2C8.5 7 5 11.5 5 15a7 7 0 0014 0c0-3.5-3.5-8-7-13z" />
@@ -21,7 +30,12 @@ const cards = [
   },
   {
     title: "Mental Clarity",
-    body: "Omega-3 + adaptogens for laser focus during crunch meetings and tight deadlines.",
+    points: [
+      "Omega-3 for sharper thinking",
+      "Adaptogens to reduce mental fatigue",
+      "Laser focus during crunch meetings",
+      "Powers through tight deadlines",
+    ],
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24" aria-hidden="true">
         <circle cx="12" cy="12" r="3" strokeLinecap="round" strokeLinejoin="round" />
@@ -31,7 +45,11 @@ const cards = [
   },
   {
     title: "Workout Ready",
-    body: "From Boardroom to Gym to Sports — seamlessly. Trusted by Star Strikers athletes.",
+    points: [
+      "From Boardroom to Gym to Sports",
+      "Seamless pre & post workout fuel",
+      "Trusted by Star Strikers athletes",
+    ],
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z M5.5 17.5l3-6M15 7.5l3 3" />
@@ -86,9 +104,14 @@ const WhyGameUp = () => (
             <h3 className="font-heading font-semibold text-lg text-neutral-900 mb-3">
               {card.title}
             </h3>
-            <p className="font-sans text-sm text-neutral-600 leading-relaxed">
-              {card.body}
-            </p>
+            <ul className="space-y-1.5">
+              {card.points.map((pt) => (
+                <li key={pt} className="flex items-start gap-2 font-sans text-sm text-neutral-600 leading-relaxed">
+                  <span className="text-[#4ade80] font-bold mt-0.5 flex-shrink-0">✓</span>
+                  {pt}
+                </li>
+              ))}
+            </ul>
           </motion.div>
         ))}
       </div>

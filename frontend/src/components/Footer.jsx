@@ -298,6 +298,20 @@ const Footer = () => {
               </a>
             </div>
 
+            <div className="flex items-center gap-2 font-sans text-sm">
+              <svg className="w-4 h-4 text-primary-500 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 2a10 10 0 100 20A10 10 0 0012 2zm0 0c2.5 2.5 4 6 4 10s-1.5 7.5-4 10m0-20C9.5 4.5 8 8 8 12s1.5 7.5 4 10M2 12h20" />
+              </svg>
+              <a
+                href="https://www.mindymunchs.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary-600 hover:text-primary-700 font-medium transition-colors duration-200"
+              >
+                www.mindymunchs.com
+              </a>
+            </div>
+
             {/* Available On */}
             <div className="flex flex-col sm:flex-row items-center lg:items-center lg:justify-end gap-3 sm:gap-4 mt-4">
               <span className="font-medium text-sm sm:text-base">

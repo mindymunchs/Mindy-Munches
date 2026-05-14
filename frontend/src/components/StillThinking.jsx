@@ -3,28 +3,47 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const faqs = [
   {
-    q: "Is it actually safe?",
-    a: "100%. Game Up is FSSAI certified, lab-tested, and made with ingredients your grandmother would approve of. No artificial stimulants. No mystery compounds. Just clean fuel.",
+    q: "When is the best time to drink Game Up for maximum benefits?",
+    a: "Game Up is best consumed in the morning on an empty stomach to kickstart metabolism, provide steady energy, and keep you full for longer. It can also be taken mid-morning or as a midday drink to stay hydrated and avoid energy dips.",
   },
   {
-    q: "Does it really work or is it just hype?",
-    a: "Chana Sattu is generally safe and actually quite well suited for sustained energy with no crash. It's a whole food rich in protein, fibre which supports digestion and gut health, and essential minerals. Game Up isn't just Sattu — it's fixed Sattu's limitations and amplified its benefits. A heavy traditional drink turned into a functional, office-friendly energy solution.",
+    q: "Can Game Up help with weight management and energy levels?",
+    a: "Yes. Game Up is rich in plant protein and complex carbohydrates, which help control hunger through high satiety and provide sustained energy. This makes it a smart choice for managing weight and avoiding sudden fatigue during the day.",
   },
   {
-    q: "How is it different from Red Bull or energy drinks?",
-    a: "Zero sugar. Zero crash. Zero artificial stimulants. Game Up gives you slow-release energy from whole food sources — not a 45-minute spike followed by a 2-hour crash.",
+    q: "How should I consume Game Up, and who should avoid it?",
+    content: {
+      intro: "For best results, mix Game Up with water for better hydration and taste. Avoid consuming it late at night as it may feel heavy.",
+      cautionTitle: "Who should be cautious or avoid it:",
+      cautions: [
+        "People with sensitive digestion or frequent bloating (start with small quantities)",
+        "Those with Irritable Bowel Syndrome or weak gut tolerance",
+        "Individuals with roasted gram (chana) allergies",
+        "Anyone advised a low-fibre diet by their doctor",
+        "Anyone advised a low-potassium diet by their doctor",
+      ],
+      disclaimer: "This is a general wellness recommendation and not medical advice. Individual responses may vary — please consult a healthcare professional if you have any underlying health conditions or dietary restrictions.",
+    },
+  },
+  {
+    q: "How is Game Up different from other energy drinks?",
+    a: "Zero crash. Zero stimulants. Game Up gives you slow-release energy from plant sources — not a 45-minute spike followed by a 2-hour crash.",
   },
   {
     q: "Can I drink it every day?",
-    a: "Yes — that's the point. Game Up is designed as your daily performance fuel, not an occasional boost. Clean ingredients make it safe for everyday use.",
+    content: {
+      intro: "Yes, it can be enjoyed daily when consumed in the recommended quantity. For best results, we suggest having it 4–5 days a week — consistency helps your body adapt and supports more noticeable benefits over time.",
+      note: "Moderation is key — more is not necessarily better. Stick to the suggested serving size.",
+      disclaimer: "If you have any ongoing kidney concerns, digestive sensitivity (such as frequent gas, bloating, or IBS), or are on a medically restricted diet, please consult your healthcare practitioner before regular consumption.",
+    },
   },
   {
-    q: "How do I order? Is it available on Swiggy/Zomato?",
-    a: "Currently available via WhatsApp order only — fastest delivery, direct from us to you. Hit the button below and we'll sort it in minutes.",
+    q: "How do I order?",
+    a: "You can order via WhatsApp or directly from our website, www.mindymunchs.com.",
   },
   {
     q: "What does it taste like?",
-    a: "Two flavours: Jaljira — refreshing and tangy, great served cold. Masala — bold and warming, great any time. More flavours like Coffee are coming soon.",
+    a: "Game Up currently has 2 popular flavours — Jaljira: a chatpata tangy flavour for those who like a kick; and Masala: very mild for those who want a healthy drink without a strong flavour.",
   },
 ];
 
@@ -103,9 +122,36 @@ const StillThinking = () => {
                     transition={{ duration: 0.3, ease: "easeInOut" }}
                     style={{ overflow: "hidden" }}
                   >
-                    <p className="font-sans text-sm text-neutral-600 leading-relaxed pb-5">
-                      {faq.a}
-                    </p>
+                    {faq.a ? (
+                      <p className="font-sans text-sm text-neutral-600 leading-relaxed pb-5">
+                        {faq.a}
+                      </p>
+                    ) : faq.content ? (
+                      <div className="font-sans text-sm text-neutral-600 leading-relaxed pb-5 space-y-3">
+                        <p>{faq.content.intro}</p>
+                        {faq.content.cautionTitle && (
+                          <>
+                            <p className="font-semibold text-neutral-700">{faq.content.cautionTitle}</p>
+                            <ul className="space-y-1.5 pl-1">
+                              {faq.content.cautions.map((c) => (
+                                <li key={c} className="flex items-start gap-2">
+                                  <span className="text-[#4ade80] font-bold mt-0.5 flex-shrink-0">✓</span>
+                                  {c}
+                                </li>
+                              ))}
+                            </ul>
+                          </>
+                        )}
+                        {faq.content.note && (
+                          <p>{faq.content.note}</p>
+                        )}
+                        {faq.content.disclaimer && (
+                          <p className="text-xs text-neutral-400 italic border-t border-neutral-200 pt-3">
+                            {faq.content.disclaimer}
+                          </p>
+                        )}
+                      </div>
+                    ) : null}
                   </motion.div>
                 )}
               </AnimatePresence>
