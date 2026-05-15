@@ -15,6 +15,7 @@ if (process.env.NODE_ENV === 'production') {
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
+import StickyFAB from "./components/StickyFAB";
 import Home from "./pages/Home";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
@@ -388,6 +389,7 @@ function App() {
           </AnimatePresence>
         </main>
         <Footer />
+        <StickyFAB />
       </div>
     </GoogleOAuthProvider>
   );

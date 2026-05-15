@@ -174,7 +174,7 @@ const TrustCertified = () => (
             transition={{ duration: 0.5, delay: 0.35 }}
           >
             <a
-              href="#whatsapp-cta"
+              href="https://wa.me/919355926060?text=Hi%2C%20I%20want%20to%20order%20Game%20Up!"
               className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1ebe5d] text-white font-heading font-semibold text-sm uppercase tracking-wide px-6 py-3 rounded-lg transition-colors duration-200"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -183,7 +183,7 @@ const TrustCertified = () => (
               Chat on WhatsApp
             </a>
             <a
-              href="#whatsapp-cta"
+              href="https://wa.me/919355926060?text=Hi%2C%20I%20want%20to%20order%20Game%20Up!"
               className="flex-1 flex items-center justify-center bg-accent-500 hover:bg-accent-600 text-neutral-900 font-heading font-semibold text-sm uppercase tracking-wide px-6 py-3 rounded-lg transition-colors duration-200"
             >
               Order Trial Kit
