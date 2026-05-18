@@ -78,15 +78,11 @@ const StillThinking = () => {
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.5, ease: "easeOut" }}
         >
-          <p className="text-xs uppercase tracking-[0.2em] font-semibold text-[#4ade80] mb-3">
-            Common Questions
-          </p>
           <h2 className="font-heading font-bold text-neutral-900 mb-4">
             Still Thinking?
           </h2>
           <p className="font-sans text-base text-neutral-600 max-w-xl mx-auto">
-            We get it. Here are the questions everyone asks before their first
-            order.
+            Mindy Munchs is an ideal fusion of tradition and nutrition for your health & wellness. Curated for a hectic yet active, energetic modern lifestyle.
           </p>
         </motion.div>
 

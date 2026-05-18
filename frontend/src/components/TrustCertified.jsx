@@ -29,12 +29,9 @@ const chips = [
 ];
 
 const fuelPoints = [
-  { icon: "⚡", text: "Low Glycaemic Index — Diabetic Friendly" },
-  { icon: "🌾", text: "Complex Carbs — Keeps You Full for Long" },
-  { icon: "🚫", text: "No Refined Sugar" },
-  { icon: "🧪", text: "No Chemicals or Artificial Stimulants" },
-  { icon: "🌱", text: "100% Natural Ingredients" },
-  { icon: "💪", text: "Sustained Energy — Zero Crash" },
+  { icon: "📉", text: "Low G.I. (Glycaemic Index) — Makes it Diabetic Friendly" },
+  { icon: "🌾", text: "Complex Carbohydrates Provide Energy Slow & Steady" },
+  { icon: "🥗", text: "Fibre Dense & High Satiety — Keeps You Full for Long, Curbs Cravings & Controls Mindless Munching" },
 ];
 
 const TrustCertified = () => (
@@ -71,7 +68,7 @@ const TrustCertified = () => (
             transition={{ duration: 0.5, delay: 0.1 }}
           >
             <p className="font-heading font-semibold text-xs uppercase tracking-[0.18em] text-[#4ade80] mb-5">
-              Daily Performance Fuel Powered
+              Daily Performance Fuel — A Powerful Ritual
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {fuelPoints.map((item, i) => (

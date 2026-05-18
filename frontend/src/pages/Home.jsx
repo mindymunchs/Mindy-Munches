@@ -87,7 +87,7 @@ const Home = () => {
       ),
       title: "Ease",
       description:
-        "Bringing traditional food to modern convenience. Experience authentic Indian heritage foods with simple, accessible packaging.",
+        "Bringing the goodness of traditional foods for a hectic lifestyle in a delicious and easy to consume format.",
     },
     {
       icon: (
@@ -99,7 +99,7 @@ const Home = () => {
       ),
       title: "Empower",
       description:
-        "Empowering you to make it your way. Customize your wellness journey with versatile traditional superfoods that adapt to your lifestyle.",
+        "Empowering you through a daily nourishment ritual with functional traditional superfoods designed to support steady energy, sharper focus and sustained daily performance.",
     },
     {
       icon: (
@@ -229,7 +229,7 @@ const Home = () => {
               Daily Performance Fuel Shop
             </h2>
             <p className="font-sans text-base text-neutral-600 max-w-xl mx-auto">
-              Real ingredients. Real results. No shortcuts.
+              Up Your Game, Add the Ritual to Your Cart.
             </p>
           </motion.div>
 
