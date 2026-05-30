@@ -8,9 +8,7 @@ const fade = (delay) => ({
 
 const trustChips = [
   "✓ Endorsed by Nutritionist",
-  "✓ FSSAI Certified",
   "✓ Official Drinks Partner — Star Strikers Delhi NCR",
-  "✓ NABL Accredited Lab Tested",
 ];
 
 const HeroSection = () => (

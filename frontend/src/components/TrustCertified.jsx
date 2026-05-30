@@ -19,6 +19,12 @@ const certs = [
     label: "APEDA Registered",
     sub: "Reg. RCMC/APEDA/24864/2025-26",
   },
+  {
+    src: "/Nutritionalist_logo.jpeg",
+    alt: "Endorsed by Nutritionist",
+    label: "Endorsed by Nutritionist",
+    sub: "",
+  },
 ];
 
 const chips = [
@@ -31,7 +37,8 @@ const chips = [
 const fuelPoints = [
   { icon: "📉", text: "Low G.I. (Glycaemic Index) — Makes it Diabetic Friendly" },
   { icon: "🌾", text: "Complex Carbohydrates Provide Energy Slow & Steady" },
-  { icon: "🥗", text: "Fibre Dense & High Satiety — Keeps You Full for Long, Curbs Cravings & Controls Mindless Munching" },
+  { icon: "🥗", text: "Fibre Dense & High Satiety — Keeps You Full for Long" },
+  { icon: "🚫", text: "Curbs Cravings & Controls Mindless Munching" },
 ];
 
 const TrustCertified = () => (
@@ -131,7 +138,7 @@ const TrustCertified = () => (
 
           {/* 3 ── Cert logos (BOTTOM) */}
           <motion.div
-            className="flex flex-wrap gap-x-8 gap-y-4"
+            className="flex flex-wrap gap-x-10 gap-y-6"
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-60px" }}
@@ -140,23 +147,27 @@ const TrustCertified = () => (
             {certs.map((cert, i) => (
               <motion.div
                 key={cert.label}
-                className="flex flex-col items-center gap-2 group"
+                className="flex flex-col items-center gap-2"
                 initial={{ opacity: 0, y: 12 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
                 transition={{ duration: 0.4, delay: i * 0.1 }}
               >
-                <div className="h-12 w-28 flex items-center justify-center">
+                <div className="h-14 w-24 flex items-center justify-center">
                   <img
                     src={cert.src}
                     alt={cert.alt}
-                    className="max-h-full max-w-full object-contain opacity-70 group-hover:opacity-100 transition-opacity duration-200"
+                    className="max-h-full max-w-full object-contain"
                   />
                 </div>
-                <p className="font-sans text-xs text-neutral-500 text-center leading-relaxed">
+                <p className="font-sans text-xs text-primary-600 font-semibold text-center leading-snug">
                   {cert.label}
-                  <br />
-                  <span className="text-neutral-400">{cert.sub}</span>
+                  {cert.sub && (
+                    <>
+                      <br />
+                      <span className="text-neutral-400 font-normal">{cert.sub}</span>
+                    </>
+                  )}
                 </p>
               </motion.div>
             ))}

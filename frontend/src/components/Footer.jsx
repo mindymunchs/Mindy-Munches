@@ -100,7 +100,7 @@ const Footer = () => {
     ],
     products: [
       { name: "Makhana", href: "/makhana" },
-      { name: "Sattu", href: "/sattu" },
+      { name: "Game Up", href: "/sattu" },
     ],
     support: [
       { name: "Contact Us", href: "/contact" },
@@ -196,9 +196,6 @@ const Footer = () => {
                   />
                 </div>
               </Link>
-              <p className="font-sans text-xs text-neutral-500 text-center lg:text-left mt-2">
-                Clean Performance Fuel for India
-              </p>
             </div>
 
             <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
