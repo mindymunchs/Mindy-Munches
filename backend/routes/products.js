@@ -9,22 +9,40 @@ const {
 
 const router = express.Router();
 
-// Validation rules (keep as is)
+const CATEGORIES = ["Snacks", "Sweets", "Health Mix", "Beverages", "makhana", "sattu", "Other"];
+
+// Validation rules for create (strict)
 const productValidation = [
   body("name").trim().isLength({ min: 2, max: 100 }),
   body("description").trim().isLength({ min: 10, max: 2000 }),
   body("shortDescription").optional().trim().isLength({ max: 200 }),
   body("price").isNumeric().isFloat({ min: 0 }),
   body("originalPrice").optional().isNumeric().isFloat({ min: 0 }),
-  body("category").isIn([
-    "Snacks",
-    "Sweets",
-    "Health Mix",
-    "Beverages",
-    "Other",
-  ]),
+  body("category").isIn(CATEGORIES),
   body("subcategory").optional().trim().isLength({ max: 50 }),
   body("stock").isInt({ min: 0 }),
+  body("sku").optional().trim().isLength({ min: 3, max: 20 }),
+  body("images").optional().isArray(),
+  body("weight.value").optional().isNumeric(),
+  body("weight.unit").optional().isIn(["g", "kg", "ml", "l"]),
+  body("tags").optional().isArray(),
+  body("isActive").optional().isBoolean(),
+  body("isFeatured").optional().isBoolean(),
+  body("isOrganic").optional().isBoolean(),
+  body("isBestseller").optional().isBoolean(),
+  body("origin").optional().trim().isLength({ max: 100 }),
+];
+
+// Validation rules for update (all optional)
+const updateProductValidation = [
+  body("name").optional().trim().isLength({ min: 2, max: 100 }),
+  body("description").optional().trim().isLength({ min: 10, max: 2000 }),
+  body("shortDescription").optional().trim().isLength({ max: 200 }),
+  body("price").optional().isNumeric().isFloat({ min: 0 }),
+  body("originalPrice").optional().isNumeric().isFloat({ min: 0 }),
+  body("category").optional().isIn(CATEGORIES),
+  body("subcategory").optional().trim().isLength({ max: 50 }),
+  body("stock").optional().isInt({ min: 0 }),
   body("sku").optional().trim().isLength({ min: 3, max: 20 }),
   body("images").optional().isArray(),
   body("weight.value").optional().isNumeric(),
@@ -74,7 +92,7 @@ router.put(
   "/:id",
   authenticate,
   requireAdmin,
-  productValidation,
+  updateProductValidation,
   productController.updateProduct
 );
 router.delete(
