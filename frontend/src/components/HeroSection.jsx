@@ -6,10 +6,6 @@ const fade = (delay) => ({
   transition: { duration: 0.55, ease: "easeOut", delay },
 });
 
-const trustChips = [
-  "✓ Endorsed by Nutritionist",
-  "✓ Official Drinks Partner — Star Strikers Delhi NCR",
-];
 
 const HeroSection = () => (
   <section className="relative overflow-hidden min-h-[85vh] md:min-h-screen">
@@ -115,16 +111,30 @@ const HeroSection = () => (
               </a>
             </motion.div>
 
-            {/* Trust chips */}
-            <motion.div {...fade(0.75)} className="flex flex-wrap gap-2">
-              {trustChips.map((chip) => (
-                <span
-                  key={chip}
-                  className="bg-white/10 backdrop-blur-sm border border-white/20 text-white/80 text-xs px-3 py-1.5 rounded-full"
-                >
-                  {chip}
-                </span>
-              ))}
+            {/* Partner logos */}
+            <motion.div {...fade(0.75)} className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-2.5 shadow-lg">
+                <img
+                  src="/starstriker.png"
+                  alt="Star Strikers"
+                  className="h-11 w-11 object-contain"
+                />
+                <div>
+                  <p className="text-neutral-400 text-[10px] uppercase tracking-wider leading-none mb-0.5">Official Drinks Partner</p>
+                  <p className="text-neutral-800 text-xs font-bold leading-snug">Star Strikers FA</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-2.5 shadow-lg">
+                <img
+                  src="/Nutritionalist_logo.png"
+                  alt="Neeta Shukla Nutritionist"
+                  className="h-11 w-11 object-contain"
+                />
+                <div>
+                  <p className="text-neutral-400 text-[10px] uppercase tracking-wider leading-none mb-0.5">Endorsed by</p>
+                  <p className="text-neutral-800 text-xs font-bold leading-snug">Neeta Shukla</p>
+                </div>
+              </div>
             </motion.div>
 
           </div>

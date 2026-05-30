@@ -157,7 +157,7 @@ export default function Connect() {
   };
 
   /* ── style helpers ── */
-  const BASE = { fontFamily:"'Inter',system-ui,sans-serif", boxSizing:"border-box" };
+  const BASE = { fontFamily:"'Montserrat',system-ui,sans-serif", boxSizing:"border-box" };
   const inp  = id => ({
     width:"100%", padding:"0.72rem 0.95rem",
     border:`1.5px solid ${focused===id ? "#5f8aa4" : "#ddd9d6"}`,
@@ -227,7 +227,7 @@ export default function Connect() {
               <span style={{ display:"inline-flex", alignItems:"center", gap:5, background:"rgba(95,138,164,0.1)", color:"#0369a1", fontSize:"0.64rem", fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase", padding:"3px 11px", borderRadius:999, marginBottom:"0.85rem" }}>
                 ✦ Product Spotlight
               </span>
-              <h2 style={{ fontFamily:"'Oswald',sans-serif", fontSize:"clamp(1.2rem,2.5vw,1.6rem)", fontWeight:700, color:"#1c1917", marginBottom:"0.45rem", lineHeight:1.2 }}>
+              <h2 style={{ fontFamily:"'Montserrat',sans-serif", fontSize:"clamp(1.2rem,2.5vw,1.6rem)", fontWeight:700, color:"#1c1917", marginBottom:"0.45rem", lineHeight:1.2 }}>
                 {config?.productTitle || "Daily Performance Fuel"}
               </h2>
               <p style={{ color:"#57534e", fontSize:"0.9rem", lineHeight:1.65, marginBottom:0 }}>
@@ -248,7 +248,7 @@ export default function Connect() {
 
             {/* ── Contact Info Card ── */}
             <div style={{ ...CARD, animation:"slideUp 0.45s 0.1s ease-out both", flex: wide ? "1 1 auto" : undefined }}>
-              <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(1.3rem,2.5vw,1.6rem)", fontWeight:700, color:"#1c1917", marginBottom:"0.2rem" }}>
+              <h1 style={{ fontFamily:"'Montserrat',sans-serif", fontSize:"clamp(1.3rem,2.5vw,1.6rem)", fontWeight:700, color:"#1c1917", marginBottom:"0.2rem" }}>
                 Connect With Us
               </h1>
               <p style={{ color:"#78716c", fontSize:"0.85rem", marginBottom:"1.3rem" }}>
@@ -301,7 +301,7 @@ export default function Connect() {
             <div style={{ flexShrink:0, marginBottom:"1rem" }}>
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:"0.75rem" }}>
                 <div>
-                  <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(1.2rem,2vw,1.5rem)", fontWeight:700, color:"#1c1917", marginBottom:"0.15rem" }}>
+                  <h2 style={{ fontFamily:"'Montserrat',sans-serif", fontSize:"clamp(1.2rem,2vw,1.5rem)", fontWeight:700, color:"#1c1917", marginBottom:"0.15rem" }}>
                     Your Experience
                   </h2>
                   <p style={{ color:"#78716c", fontSize:"0.82rem" }}>Tap to select — tap again to undo.</p>
@@ -379,7 +379,7 @@ export default function Connect() {
                 style={{
                   width:"100%", padding:"0.95rem",
                   background: submitting ? "#a8a29e" : "linear-gradient(135deg,#57534e 0%,#1c1917 100%)",
-                  color:"#fff", fontFamily:"'Oswald',sans-serif", fontSize:"1rem", fontWeight:600,
+                  color:"#fff", fontFamily:"'Montserrat',sans-serif", fontSize:"1rem", fontWeight:600,
                   letterSpacing:"0.06em", borderRadius:13, border:"none",
                   cursor: submitting ? "not-allowed" : "pointer",
                   boxShadow: submitting ? "none" : "0 5px 22px rgba(28,25,23,0.22)",
@@ -426,14 +426,14 @@ export default function Connect() {
             <div style={{ width:60, height:60, borderRadius:"50%", background:"linear-gradient(135deg,#5f8aa4,#d6dd28)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"1.6rem", margin:"0 auto 1.2rem", boxShadow:"0 6px 20px rgba(95,138,164,0.28)" }}>
               🍯
             </div>
-            <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:"1.55rem", fontWeight:700, color:"#1c1917", textAlign:"center", marginBottom:"0.4rem" }}>Thank You!</h2>
+            <h2 style={{ fontFamily:"'Montserrat',sans-serif", fontSize:"1.55rem", fontWeight:700, color:"#1c1917", textAlign:"center", marginBottom:"0.4rem" }}>Thank You!</h2>
             <p style={{ color:"#78716c", fontSize:"0.9rem", textAlign:"center", lineHeight:1.65, marginBottom:"1.75rem" }}>
               Your feedback has been submitted.<br />
               Helping us make <strong style={{ color:"#292524" }}>Mindy Munchs</strong> even better.
             </p>
             <div style={{ display:"flex", flexDirection:"column", gap:"0.65rem" }}>
               <button className="m-pri" type="button" onClick={() => navigate("/")}
-                style={{ width:"100%", padding:"0.95rem", background:"linear-gradient(135deg,#57534e,#1c1917)", color:"#fff", fontFamily:"'Oswald',sans-serif", fontWeight:600, fontSize:"0.97rem", borderRadius:13, border:"none", cursor:"pointer", letterSpacing:"0.05em" }}>
+                style={{ width:"100%", padding:"0.95rem", background:"linear-gradient(135deg,#57534e,#1c1917)", color:"#fff", fontFamily:"'Montserrat',sans-serif", fontWeight:600, fontSize:"0.97rem", borderRadius:13, border:"none", cursor:"pointer", letterSpacing:"0.05em" }}>
                 Back to Homepage
               </button>
               <button className="m-sec" type="button" onClick={() => setShowModal(false)}

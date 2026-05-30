@@ -20,10 +20,10 @@ const certs = [
     sub: "Reg. RCMC/APEDA/24864/2025-26",
   },
   {
-    src: "/Nutritionalist_logo.jpeg",
-    alt: "Endorsed by Nutritionist",
-    label: "Endorsed by Nutritionist",
-    sub: "",
+    src: "/starstriker.png",
+    alt: "Official Drinks Partner — Star Strikers FA",
+    label: "Official Drinks Partner",
+    sub: "Star Strikers FA",
   },
 ];
 
