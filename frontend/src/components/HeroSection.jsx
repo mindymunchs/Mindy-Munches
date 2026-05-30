@@ -8,9 +8,7 @@ const fade = (delay) => ({
 
 const trustChips = [
   "✓ Endorsed by Nutritionist",
-  "✓ FSSAI Certified",
   "✓ Official Drinks Partner — Star Strikers Delhi NCR",
-  "✓ NABL Accredited Lab Tested",
 ];
 
 const HeroSection = () => (
@@ -39,9 +37,9 @@ const HeroSection = () => (
         Recommended size: 1920x1080px minimum.
       */}
       <picture>
-        <source media="(max-width: 767px)" srcSet="/MOBILE_BANNER_1_lovable_ver_2.png" />
+        <source media="(max-width: 767px)" srcSet="/MOBILE_BANNER_1_lovable_ver_3.png" />
         <img
-          src="/banner_1_lovable_ver_2.png"
+          src="/banner_1_lovable_ver_3.png"
           alt="Mindy Munchs Game Up — Clean Performance Fuel"
           className="absolute inset-0 w-full h-full object-cover object-center"
           loading="eager"
@@ -49,7 +47,7 @@ const HeroSection = () => (
         />
       </picture>
       {/* Dark left-to-transparent gradient keeps text readable without hiding the product image */}
-      <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/70 to-black/30" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/45 to-black/10" />
     </div>
 
     {/* ── Content ─────────────────────────────────────────────────────── */}
@@ -87,7 +85,7 @@ const HeroSection = () => (
               {...fade(0.5)}
               className="text-sm tracking-wide uppercase text-white/55 mb-10"
             >
-              Powered by India's Original Superfood · Chana Sattu
+              Powered by India's Original Superfuel · Chana Sattu
             </motion.p>
 
             {/* CTA row */}
@@ -101,7 +99,7 @@ const HeroSection = () => (
                   or Interakt widget trigger */}
               {/* TODO: Replace with live Interakt/WhatsApp number before launch */}
               <a
-                href="https://wa.me/919999999999?text=Hi%2C%20I%20want%20to%20order%20Game%20Up!"
+                href="https://wa.me/919355926060?text=Hi%2C%20I%20want%20to%20order%20Game%20Up!"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-heading text-base font-semibold uppercase tracking-wide py-4 px-8 rounded-lg bg-accent-500 hover:bg-accent-400 text-neutral-900 transition-transform duration-200 hover:scale-[1.02] text-center"

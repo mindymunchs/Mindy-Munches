@@ -100,7 +100,7 @@ const Footer = () => {
     ],
     products: [
       { name: "Makhana", href: "/makhana" },
-      { name: "Sattu", href: "/sattu" },
+      { name: "Game Up", href: "/sattu" },
     ],
     support: [
       { name: "Contact Us", href: "/contact" },
@@ -196,9 +196,6 @@ const Footer = () => {
                   />
                 </div>
               </Link>
-              <p className="font-sans text-xs text-neutral-500 text-center lg:text-left mt-2">
-                Clean Performance Fuel for India
-              </p>
             </div>
 
             <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
@@ -295,6 +292,20 @@ const Footer = () => {
                 className="underline text-primary-600 hover:text-primary-700 transition-colors duration-200 break-all"
               >
                 wecare@mindymunchs.com
+              </a>
+            </div>
+
+            <div className="flex items-center gap-2 font-sans text-sm">
+              <svg className="w-4 h-4 text-primary-500 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 2a10 10 0 100 20A10 10 0 0012 2zm0 0c2.5 2.5 4 6 4 10s-1.5 7.5-4 10m0-20C9.5 4.5 8 8 8 12s1.5 7.5 4 10M2 12h20" />
+              </svg>
+              <a
+                href="https://www.mindymunchs.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary-600 hover:text-primary-700 font-medium transition-colors duration-200"
+              >
+                www.mindymunchs.com
               </a>
             </div>
 

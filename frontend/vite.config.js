@@ -11,7 +11,8 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
     ],
     server: {
-      port: 3000,
+      port: 3100,
+      host: '127.0.0.1',
       proxy: {
         "/api": {
           target: "http://localhost:5000", // Your backend port

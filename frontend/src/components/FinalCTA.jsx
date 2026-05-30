@@ -51,7 +51,7 @@ const FinalCTA = () => (
         >
           {/* TODO: Replace with live Interakt/WhatsApp number before launch */}
           <a
-            href="https://wa.me/919999999999?text=Hi%2C%20I%20want%20to%20order%20Game%20Up!"
+            href="https://wa.me/919355926060?text=Hi%2C%20I%20want%20to%20order%20Game%20Up!"
             target="_blank"
             rel="noopener noreferrer"
             className="w-full sm:w-auto inline-block bg-accent-500 text-neutral-900 font-heading font-semibold uppercase tracking-wide py-4 px-8 rounded-lg transition-transform duration-200 hover:scale-[1.02] text-center"
@@ -63,7 +63,7 @@ const FinalCTA = () => (
             href="/products"
             className="w-full sm:w-auto inline-block border-2 border-primary-600 text-primary-700 bg-transparent font-heading font-semibold uppercase tracking-wide py-4 px-8 rounded-lg transition-colors duration-200 hover:bg-primary-50 text-center"
           >
-            Try Starter Pack @ ₹299
+            Try Starter Kit @ ₹550
           </a>
         </motion.div>
       </motion.div>
