@@ -6,6 +6,7 @@ const {
   requireAdmin,
   optionalAuth,
 } = require("../middleware/auth");
+const { upload } = require("../middleware/upload");
 
 const router = express.Router();
 
@@ -76,6 +77,24 @@ router.get("/featured", productController.getFeaturedProducts);
 router.get("/categories", productController.getCategories);
 router.get("/bestsellers", productController.getBestsellers);
 router.get("/search", searchValidation, productController.searchProducts);
+
+// Image upload (admin only)
+router.post(
+  "/upload-image",
+  authenticate,
+  requireAdmin,
+  upload.single("image"),
+  (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "No image uploaded" });
+    }
+    res.json({
+      success: true,
+      url: req.file.path,
+      public_id: req.file.filename,
+    });
+  }
+);
 
 // 2. List all products (root with query params)
 router.get("/", optionalAuth, productController.getAllProducts);

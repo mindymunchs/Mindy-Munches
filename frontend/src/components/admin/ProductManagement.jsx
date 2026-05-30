@@ -1163,51 +1163,91 @@ const ProductManagement = () => {
                     Product Images
                   </label>
                   {formData.images.map((image, index) => (
-                    <div
-                      key={index}
-                      className="mb-3 p-3 border border-gray-200 rounded-lg"
-                    >
+                    <div key={index} className="mb-3 p-3 border border-gray-200 rounded-lg">
+
+                      {/* Preview */}
+                      {image.url && (
+                        <img
+                          src={image.url}
+                          alt={image.alt || "preview"}
+                          className="w-24 h-24 object-cover rounded-lg mb-3 border border-gray-200"
+                        />
+                      )}
+
+                      {/* File upload */}
+                      <div className="mb-2">
+                        <label className="block text-xs text-gray-500 mb-1">Upload from device</label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          disabled={image.uploading}
+                          onChange={async (e) => {
+                            const file = e.target.files[0];
+                            if (!file) return;
+                            handleImageChange(index, "uploading", true);
+                            try {
+                              const formDataUpload = new FormData();
+                              formDataUpload.append("image", file);
+                              const token = localStorage.getItem("token");
+                              const res = await fetch(
+                                `${import.meta.env.VITE_API_URL}/products/upload-image`,
+                                {
+                                  method: "POST",
+                                  headers: { Authorization: `Bearer ${token}` },
+                                  body: formDataUpload,
+                                }
+                              );
+                              const data = await res.json();
+                              if (data.success) {
+                                handleImageChange(index, "url", data.url);
+                                if (!image.alt) handleImageChange(index, "alt", file.name.replace(/\.[^.]+$/, ""));
+                              } else {
+                                alert("Upload failed: " + data.message);
+                              }
+                            } catch {
+                              alert("Upload failed. Please try again.");
+                            } finally {
+                              handleImageChange(index, "uploading", false);
+                            }
+                          }}
+                          className="w-full text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100"
+                        />
+                        {image.uploading && <p className="text-xs text-orange-500 mt-1">Uploading...</p>}
+                      </div>
+
+                      {/* Or URL input */}
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div className="md:col-span-2">
+                          <label className="block text-xs text-gray-500 mb-1">Or paste image URL</label>
                           <input
                             type="url"
-                            placeholder="Image URL"
+                            placeholder="https://..."
                             value={image.url}
-                            onChange={(e) =>
-                              handleImageChange(index, "url", e.target.value)
-                            }
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                            onChange={(e) => handleImageChange(index, "url", e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
                           />
                         </div>
                         <div>
+                          <label className="block text-xs text-gray-500 mb-1">Alt text</label>
                           <input
                             type="text"
                             placeholder="Alt text"
                             value={image.alt}
-                            onChange={(e) =>
-                              handleImageChange(index, "alt", e.target.value)
-                            }
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                            onChange={(e) => handleImageChange(index, "alt", e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
                           />
                         </div>
                       </div>
+
                       <div className="flex items-center justify-between mt-3">
                         <label className="flex items-center">
                           <input
                             type="checkbox"
                             checked={image.isPrimary}
-                            onChange={(e) =>
-                              handleImageChange(
-                                index,
-                                "isPrimary",
-                                e.target.checked
-                              )
-                            }
+                            onChange={(e) => handleImageChange(index, "isPrimary", e.target.checked)}
                             className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
                           />
-                          <span className="ml-2 text-sm text-gray-700">
-                            Primary Image
-                          </span>
+                          <span className="ml-2 text-sm text-gray-700">Primary Image</span>
                         </label>
                         {formData.images.length > 1 && (
                           <button
