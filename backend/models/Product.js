@@ -57,6 +57,14 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isBestseller: {
+      type: Boolean,
+      default: false,
+    },
+    isOrganic: {
+      type: Boolean,
+      default: false,
+    },
     tags: [
       {
         type: String,
@@ -172,6 +180,7 @@ productSchema.index({ slug: 1 });
 // Existing indexes
 productSchema.index({ category: 1 });
 productSchema.index({ isFeatured: 1 });
+productSchema.index({ isBestseller: 1 });
 productSchema.index({ isActive: 1 });
 productSchema.index({ createdAt: -1 });
 
