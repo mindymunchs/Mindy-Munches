@@ -104,7 +104,9 @@ const HeroSection = () => (
               </a>
 
               <a
-                href="/products"
+                href="https://www.mindymunchs.com/product/game-up-1030gm"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="font-heading text-base font-semibold uppercase tracking-wide py-4 px-8 rounded-lg border border-white/60 text-white bg-transparent hover:bg-white/10 transition-colors duration-200 text-center"
               >
                 Order Trial Kit Now
@@ -131,7 +133,7 @@ const HeroSection = () => (
                   className="h-11 w-11 object-contain"
                 />
                 <div>
-                  <p className="text-neutral-400 text-[10px] uppercase tracking-wider leading-none mb-0.5">Endorsed by</p>
+                  <p className="text-neutral-400 text-[10px] uppercase tracking-wider leading-none mb-0.5">India's Leading Dietician</p>
                   <p className="text-neutral-800 text-xs font-bold leading-snug">Neeta Shukla</p>
                 </div>
               </div>

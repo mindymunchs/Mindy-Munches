@@ -40,11 +40,14 @@ const Makhana = () => {
             <p className="text-base sm:text-lg text-neutral-700 leading-relaxed">
               Hand graded Makhana in a beautiful square transparent pack. This ascertains our complete transparency and commitment to give you the best.
             </p>
-            <Link to="/products">
-              <button className="btn-accent text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold hover:scale-105 transform transition-all duration-300 shadow-lg">
-                Shop Now
-              </button>
-            </Link>
+            <a
+              href="https://www.mindymunchs.com/product/jumbo-makahana"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-accent text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold hover:scale-105 transform transition-all duration-300 shadow-lg inline-block"
+            >
+              Shop Now
+            </a>
           </div>
         </div>
       </div>

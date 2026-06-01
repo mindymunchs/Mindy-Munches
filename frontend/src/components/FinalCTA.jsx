@@ -65,7 +65,7 @@ const FinalCTA = () => (
             rel="noopener noreferrer"
             className="w-full sm:w-auto inline-block border-2 border-primary-600 text-primary-700 bg-transparent font-heading font-semibold uppercase tracking-wide py-4 px-8 rounded-lg transition-colors duration-200 hover:bg-primary-50 text-center"
           >
-            Try Starter Kit @ ₹550
+            Try Starter Kit
           </a>
         </motion.div>
       </motion.div>

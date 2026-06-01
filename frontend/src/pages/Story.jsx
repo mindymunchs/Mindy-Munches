@@ -105,8 +105,8 @@ const timeline = [
             <p className="text-accent-600 text-xs">Light • Crunchy • Comforting</p>
           </div>
           <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-center">
-            <h4 className="font-bold text-orange-700 text-sm mb-1">Sattu</h4>
-            <p className="text-orange-600 text-xs">Filling • Hydrating • Nourishing</p>
+            <h4 className="font-bold text-orange-700 text-sm mb-1">Chana Sattu</h4>
+            <p className="text-orange-600 text-xs">Daily Performance Fuel</p>
           </div>
         </div>
       </div>

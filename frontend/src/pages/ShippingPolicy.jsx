@@ -34,20 +34,12 @@ const ShippingPolicy = () => {
     {
       icon: TruckIcon,
       title: "Order Tracking",
-      description: "You'll receive an email/SMS with a tracking link once your order is shipped.",
-      details: ["Real-time tracking updates", "Delivery notifications", "SMS & email alerts"]
+      description: "To start soon...",
+      details: []
     }
   ];
 
   const policies = [
-    {
-      icon: ArrowPathIcon,
-      title: "Missed Deliveries",
-      description: "One free redelivery attempt is provided. Additional attempts may incur charges.",
-      bgColor: "bg-blue-50",
-      iconColor: "text-blue-600",
-      borderColor: "border-blue-200"
-    },
     {
       icon: ExclamationTriangleIcon,
       title: "Returns & Refunds",

@@ -191,7 +191,9 @@ const TrustCertified = () => (
               Chat on WhatsApp
             </a>
             <a
-              href="https://wa.me/919355926060?text=Hi%2C%20I%20want%20to%20order%20Game%20Up!"
+              href="https://www.mindymunchs.com/product/game-up-1030gm"
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex-1 flex items-center justify-center bg-accent-500 hover:bg-accent-600 text-neutral-900 font-heading font-semibold text-sm uppercase tracking-wide px-6 py-3 rounded-lg transition-colors duration-200"
             >
               Order Trial Kit
