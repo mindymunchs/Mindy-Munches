@@ -310,7 +310,7 @@ const Story = () => {
               Try Our Products
             </Link>
             <Link
-              to="/aboutus"
+              to="/about"
               className="bg-white text-accent-600 border-2 border-accent-600 hover:bg-accent-600 hover:text-white px-6 md:px-8 py-3 md:py-4 rounded-xl font-semibold text-base md:text-lg transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1"
             >
               Learn More About Us
