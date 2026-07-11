@@ -3,7 +3,8 @@ const crypto = require("crypto");
 const Order = require("../models/Order");
 const Cart = require("../models/Cart");
 const Product = require("../models/Product");
-const { sendOrderConfirmation } = require("../services/emailService");
+const { sendOrderConfirmation, sendAdminOrderAlert } = require("../services/emailService");
+const PromoCode = require("../models/PromoCode");
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -114,6 +115,25 @@ exports.verifyPayment = async (req, res) => {
       image: item.product?.images?.[0]?.url || item.image || "",
     }));
 
+    // Validate and apply promo code server-side (M-02)
+    const subtotal = orderDetails.subtotal || orderDetails.totalAmount;
+    const shippingCost = orderDetails.shipping || 0;
+    let discount = 0;
+    let promoCodeData = null;
+
+    if (orderDetails.promoCode?.code) {
+      const promo = await PromoCode.findOne({ code: orderDetails.promoCode.code.toUpperCase() });
+      if (promo && promo.isValid()) {
+        discount = promo.calculateDiscount(subtotal);
+        promoCodeData = { code: promo.code, discount };
+        promo.usageCount += 1;
+        if (req.user) promo.usedBy.push({ user: req.user._id });
+        await promo.save();
+      }
+    }
+
+    const verifiedTotal = subtotal + shippingCost - discount;
+
     // Create order in database
     const newOrder = new Order({
       user: req.user?._id || null,
@@ -131,9 +151,11 @@ exports.verifyPayment = async (req, res) => {
       paymentMethod: "razorpay",
       paymentStatus: "paid",
       orderStatus: "confirmed",
-      subtotal: orderDetails.subtotal || orderDetails.totalAmount,
-      shippingCost: orderDetails.shipping || 0,
-      totalAmount: orderDetails.totalAmount,
+      subtotal,
+      shippingCost,
+      discount,
+      promoCode: promoCodeData,
+      totalAmount: verifiedTotal,
       razorpayOrderId: razorpay_order_id,
       razorpayPaymentId: razorpay_payment_id,
       razorpaySignature: razorpay_signature,
@@ -178,20 +200,30 @@ exports.verifyPayment = async (req, res) => {
       );
     }
 
-    // Send order confirmation email via SendPulse
+    // Send emails (non-blocking)
+    const emailOrderData = {
+      orderId: savedOrder.orderNumber,
+      orderNumber: savedOrder.orderNumber,
+      items: orderItems,
+      subtotal,
+      shippingCost,
+      discount,
+      totalAmount: verifiedTotal,
+      shippingAddress: savedOrder.shippingAddress,
+      customerName: orderDetails.name,
+      customerEmail: orderDetails.email,
+      customerPhone: orderDetails.phone,
+    };
+
     if (orderDetails.email) {
-      try {
-        await sendOrderConfirmation(orderDetails.email, {
-          orderId: savedOrder.orderNumber,
-          items: orderItems,
-          totalAmount: orderDetails.totalAmount,
-          shippingAddress: savedOrder.shippingAddress,
-        });
-        console.log("Order confirmation email sent via SendPulse");
-      } catch (emailError) {
-        console.error(" Brevo email failed:", emailError);
-      }
+      sendOrderConfirmation(orderDetails.email, emailOrderData).catch((e) =>
+        console.error("Customer email failed:", e)
+      );
     }
+
+    sendAdminOrderAlert(emailOrderData).catch((e) =>
+      console.error("Admin email failed:", e)
+    );
 
     res.json({
       success: true,

@@ -34,6 +34,7 @@ const Checkout = () => {
   const [orderId, setOrderId] = useState(null);
   const [errors, setErrors] = useState({});
   const [completedOrderTotal, setCompletedOrderTotal] = useState(null);
+  const [paymentError, setPaymentError] = useState(null);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -274,7 +275,7 @@ const Checkout = () => {
       }
     } catch (error) {
       console.error("❌ Order placement failed:", error);
-      alert(`Order failed: ${error.message}`);
+      setPaymentError(error.message || "Order failed. Please try again.");
     } finally {
       setIsProcessing(false);
     }
@@ -554,6 +555,13 @@ const Checkout = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Payment Error */}
+              {paymentError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-700 text-sm">{paymentError}</p>
+                </div>
+              )}
 
               {/* Place Order Button */}
               <button

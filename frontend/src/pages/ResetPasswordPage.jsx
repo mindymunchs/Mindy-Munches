@@ -40,12 +40,10 @@ const ResetPasswordPage = () => {
         throw new Error(data.message || 'Failed to reset password');
       }
 
-      setMessage(data.message);
-      alert(data.message);
-      navigate('/auth'); // Redirect to login page
+      setMessage(data.message || 'Password reset successfully. Redirecting to login...');
+      setTimeout(() => navigate('/auth'), 2000);
     } catch (err) {
       setError(err.message);
-      alert(err.message);
     } finally {
       setIsLoading(false);
     }
