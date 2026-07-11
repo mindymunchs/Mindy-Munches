@@ -42,7 +42,7 @@ export const initiatePayment = async ({
     // Razorpay configuration options
     const options = {
       key: import.meta.env.VITE_RAZORPAY_KEY_ID, // Your Razorpay Key ID
-      amount: orderData.totalAmount * 100, // Amount in paise (multiply by 100)
+      amount: Math.round(orderData.totalAmount * 100), // Amount in paise (integer)
       currency: 'INR',
       name: 'Mindy Munchs',
       description: `Order for ${orderData.items?.length || 0} items`,

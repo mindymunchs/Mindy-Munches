@@ -79,7 +79,7 @@ const register = async (req, res) => {
       success: true,
       message: "User registered successfully",
       data: {
-        user,
+        user: { id: user._id, name: user.name, email: user.email, role: user.role },
         token,
       },
     });
@@ -113,6 +113,14 @@ const login = async (req, res) => {
       return res.status(401).json({
         success: false,
         message: "Invalid email or password",
+      });
+    }
+
+    // Block Google-only accounts from password login (C-02)
+    if (user.authProvider === 'google' && !user.password) {
+      return res.status(400).json({
+        success: false,
+        message: "This account uses Google Sign-In. Please sign in with Google.",
       });
     }
 
@@ -279,6 +287,13 @@ const verifyGoogleToken = async (req, res) => {
       user = await User.findOne({ email });
       
       if (user) {
+        // H-01: Block Google sign-in from overwriting existing password accounts
+        if (user.authProvider === 'local' && !user.googleId) {
+          return res.status(400).json({
+            success: false,
+            message: "An account with this email already exists. Please sign in with your email and password.",
+          });
+        }
         // Link Google account to existing user
         user.googleId = googleId;
         user.authProvider = 'google';
@@ -360,11 +375,17 @@ const verifyGoogleAccessToken = async (req, res) => {
       });
     }
 
-    // Verify the access token is valid by making a request to Google
+    // Verify the access token and validate audience (C-04)
     try {
       const verifyResponse = await axios.get(`https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${accessToken}`);
       if (!verifyResponse.data || !verifyResponse.data.audience) {
         throw new Error('Invalid access token');
+      }
+      if (verifyResponse.data.audience !== process.env.GOOGLE_CLIENT_ID) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid Google access token audience'
+        });
       }
     } catch (error) {
       return res.status(400).json({
@@ -388,6 +409,13 @@ const verifyGoogleAccessToken = async (req, res) => {
     let user = await User.findOne({ email });
 
     if (user) {
+      // H-01: Block Google sign-in from overwriting existing password accounts
+      if (user.authProvider === 'local' && !user.googleId) {
+        return res.status(400).json({
+          success: false,
+          message: "An account with this email already exists. Please sign in with your email and password.",
+        });
+      }
       // Update Google ID if not present
       if (!user.googleId) {
         user.googleId = googleId;
@@ -467,9 +495,19 @@ const refreshToken = async (req, res) => {
       });
     }
 
-    // Verify the existing token (even if expired)
+    // Verify the existing token (even if expired, but within 30-day window) (C-03)
     const decoded = jwt.verify(token, process.env.JWT_SECRET, { ignoreExpiration: true });
-    
+
+    // Reject tokens issued more than 30 days ago
+    const issuedAt = decoded.iat * 1000;
+    const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+    if (Date.now() - issuedAt > thirtyDays) {
+      return res.status(401).json({
+        success: false,
+        message: 'Session expired. Please log in again.',
+      });
+    }
+
     // Find the user
     const user = await User.findById(decoded.id);
     if (!user) {
@@ -510,6 +548,9 @@ const refreshToken = async (req, res) => {
 
 // Demo login
 const demoLogin = async (req, res) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(404).json({ success: false, message: 'Not found' });
+  }
   try {
     const { type } = req.body; // 'user' or 'admin'
 
@@ -629,6 +670,14 @@ const changePassword = async (req, res) => {
 
     const user = await User.findById(req.user._id).select("+password");
 
+    // Block Google-only accounts (H-02)
+    if (user.authProvider === 'google' && !user.password) {
+      return res.status(400).json({
+        success: false,
+        message: "Google accounts cannot change password. Please use Google Sign-In.",
+      });
+    }
+
     // Verify current password
     const isCurrentPasswordValid = await user.comparePassword(currentPassword);
     if (!isCurrentPasswordValid) {
@@ -664,10 +713,11 @@ const forgotPassword = async (req, res) => {
 
     // Find user
     user = await User.findOne({ email });
+    // C-05: Return same response whether email exists or not to prevent enumeration
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found with this email address",
+      return res.json({
+        success: true,
+        message: "If this email is registered, you will receive a reset link shortly.",
       });
     }
 
@@ -686,7 +736,7 @@ const forgotPassword = async (req, res) => {
 
     return res.json({
       success: true,
-      message: "Password reset instructions sent to your email",
+      message: "If this email is registered, you will receive a reset link shortly.",
     });
   } catch (error) {
     console.error("Forgot password error:", error);

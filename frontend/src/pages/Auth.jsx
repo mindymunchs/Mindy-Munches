@@ -338,12 +338,12 @@ const Auth = () => {
         }
       );
       const data = await response.json();
-      alert(data.message);
+      setErrors({ forgotSuccess: data.message || "If this email is registered, you will receive a reset link shortly." });
+      setForgotPasswordModalOpen(false);
     } catch (error) {
-      alert("Failed to send password reset email. Please try again.");
+      setErrors({ forgotError: "Failed to send password reset email. Please try again." });
     } finally {
       setIsLoading(false);
-      setForgotPasswordModalOpen(false);
     }
   };
 
@@ -390,6 +390,16 @@ const Auth = () => {
         {errors.general && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
             <p className="text-red-700 text-sm">{errors.general}</p>
+          </div>
+        )}
+        {errors.forgotSuccess && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-6">
+            <p className="text-green-700 text-sm">{errors.forgotSuccess}</p>
+          </div>
+        )}
+        {errors.forgotError && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
+            <p className="text-red-700 text-sm">{errors.forgotError}</p>
           </div>
         )}
 

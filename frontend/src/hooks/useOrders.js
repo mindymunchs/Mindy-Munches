@@ -46,7 +46,7 @@ export const useOrders = () => {
     }
 
     fetchOrders()
-  }, [user?._id || user?.id, token, isAuthenticated, refreshKey])
+  }, [user?._id, token, isAuthenticated, refreshKey])
 
   const currentOrders = orders.filter(order =>
     ['pending', 'confirmed', 'processing', 'shipped'].includes(order.orderStatus)

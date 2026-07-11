@@ -34,11 +34,6 @@ const useCartStore = create(
                 rawImage.url || rawImage.secure_url || rawImage.link || "";
             }
 
-            console.log("Image transformation:", {
-              name: product.name,
-              rawImage: rawImage,
-              finalUrl: imageUrl,
-            });
 
             return {
               _id: productId,
@@ -138,7 +133,7 @@ const useCartStore = create(
         set({
           items: newItems,
           loading: false,
-          isGuest: true,
+          isGuest: !localStorage.getItem("token"),
           error: null,
         });
 

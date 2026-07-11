@@ -24,9 +24,11 @@ const useAuthStore = create(
       },
 
       logout: () => {
+        // H-08: Clear localStorage token on logout
+        localStorage.removeItem("token");
+
         // Clear cart when logging out
         try {
-          // Import cart store and clear it
           import("./cartStore").then(({ default: useCartStore }) => {
             useCartStore.getState().clearLocalCart();
           });
