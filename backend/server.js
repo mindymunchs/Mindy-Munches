@@ -42,7 +42,7 @@ const app = express();
 
 // Session configuration (MUST be BEFORE passport initialization)
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'mindy-munchs-secret-key-change-in-production',
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
