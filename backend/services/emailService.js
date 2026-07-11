@@ -1,39 +1,41 @@
-// Production-ready email service using Brevo API only
-const SibApiV3Sdk = require('@sendinblue/client');
+const nodemailer = require('nodemailer');
 
-// Initialize Brevo API
-let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
-if (process.env.BREVO_API_KEY) {
-  let apiKey = apiInstance.authentications['apiKey'];
-  apiKey.apiKey = process.env.BREVO_API_KEY;
-  console.log('✅ Brevo API initialized successfully');
+// Create SMTP transporter
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: parseInt(process.env.SMTP_PORT || '587'),
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
+
+if (process.env.SMTP_USER) {
+  console.log('✅ SMTP transporter initialized');
 } else {
-  console.error('❌ Brevo API key missing - add BREVO_API_KEY to .env');
+  console.error('❌ SMTP credentials missing — add SMTP_USER and SMTP_PASS to .env');
 }
 
 // Core email sending function
 const sendEmail = async (to, subject, htmlContent, senderName = 'Mindy Munchs') => {
   try {
-    if (!process.env.BREVO_API_KEY) {
-      throw new Error('Brevo API key not configured. Add BREVO_API_KEY to environment variables.');
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      throw new Error('SMTP credentials not configured. Add SMTP_USER and SMTP_PASS to .env');
     }
 
-    let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
-    sendSmtpEmail.subject = subject;
-    sendSmtpEmail.htmlContent = htmlContent;
-    sendSmtpEmail.textContent = htmlContent.replace(/<[^>]*>/g, '');
-    sendSmtpEmail.sender = { 
-      name: senderName, 
-      email: process.env.BREVO_SENDER_EMAIL || 'noreply@mindymunchs.com' 
-    };
-    sendSmtpEmail.to = [{ email: to }];
+    const info = await transporter.sendMail({
+      from: `"${senderName}" <${process.env.SMTP_USER}>`,
+      to,
+      subject,
+      html: htmlContent,
+      text: htmlContent.replace(/<[^>]*>/g, ''),
+    });
 
-    console.log(`📧 Sending email via Brevo API to ${to}`);
-    const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
-    console.log(`✅ Email sent successfully via Brevo to ${to}`);
-    return result;
+    console.log(`✅ Email sent to ${to} — MessageId: ${info.messageId}`);
+    return info;
   } catch (error) {
-    console.error(`❌ Failed to send email via Brevo to ${to}:`, error.response?.body || error.message);
+    console.error(`❌ Failed to send email to ${to}:`, error.message);
     throw error;
   }
 };

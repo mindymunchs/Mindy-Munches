@@ -28,7 +28,7 @@ const useAuthStore = create(
         try {
           // Import cart store and clear it
           import("./cartStore").then(({ default: useCartStore }) => {
-            useCartStore.getState().clearCartOnLogout();
+            useCartStore.getState().clearLocalCart();
           });
         } catch (error) {
           console.warn("Could not clear cart on logout:", error);

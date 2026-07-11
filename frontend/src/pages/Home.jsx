@@ -252,7 +252,7 @@ const Home = () => {
               >
                 {bestsellers.map((product, index) => (
                   <div
-                    key={product.id}
+                    key={product._id || index}
                     className="flex-shrink-0 snap-start"
                     style={{
                       width: "calc(25% - 18px)", // 25% width minus gap (24px total gap / 4 * 3)

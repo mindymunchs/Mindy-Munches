@@ -679,9 +679,10 @@ const forgotPassword = async (req, res) => {
     const baseURL = process.env.FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
     const resetURL = `${baseURL}/reset-password?token=${resetToken}`;
 
-    // Send email with complete URL (not just token)
-    await emailService.sendPasswordResetEmail(user.email, resetURL);
-    console.log(`Password reset email sent to ${user.email}`);
+    // Send email — non-blocking so a mail failure doesn't 500 the request
+    emailService.sendPasswordResetEmail(user.email, resetURL)
+      .then(() => console.log(`Password reset email sent to ${user.email}`))
+      .catch(err => console.error('Password reset email failed:', err.message));
 
     return res.json({
       success: true,
@@ -690,7 +691,7 @@ const forgotPassword = async (req, res) => {
   } catch (error) {
     console.error("Forgot password error:", error);
 
-    // Roll back token fields if anything fails
+    // Roll back token fields only for non-email errors
     if (user) {
       user.passwordResetToken = undefined;
       user.passwordResetExpires = undefined;

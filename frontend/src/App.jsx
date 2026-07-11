@@ -329,7 +329,7 @@ function App() {
                 }
               />
               <Route
-                path="/reset-password/:token"
+                path="/reset-password"
                 element={
                   <motion.div
                     initial="initial"
