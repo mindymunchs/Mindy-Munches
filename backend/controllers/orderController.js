@@ -85,18 +85,23 @@ const createOrder = async (req, res) => {
       image: item.product.images?.[0]?.url || ''
     }));
 
+    // Generate order number
+    const timestamp = Date.now().toString();
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    const orderNumber = `MM${timestamp.slice(-6)}${random}`;
+
     // Create order
     const order = new Order({
       user: req.user._id,
+      orderNumber,
       items: orderItems,
       shippingAddress,
       paymentMethod,
       subtotal,
       shippingCost,
+      discount,
       promoCode: promoCodeData,
       totalAmount,
-      notes,
-      estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     });
 
     await order.save();

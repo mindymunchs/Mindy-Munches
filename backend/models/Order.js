@@ -40,7 +40,7 @@ const orderSchema = new mongoose.Schema({
   },
   paymentStatus: {
     type: String,
-    enum: ['pending', 'paid', 'failed'],
+    enum: ['pending', 'paid', 'failed', 'captured'],
     default: 'pending'
   },
   razorpayOrderId: String,
@@ -54,7 +54,10 @@ const orderSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  // ✅ NEW: Promo Code fields
+  discount: {
+    type: Number,
+    default: 0
+  },
   promoCode: {
     code: String,
     discount: Number
@@ -65,7 +68,7 @@ const orderSchema = new mongoose.Schema({
   },
   orderStatus: {
     type: String,
-    enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
+    enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'],
     default: 'pending'
   },
   trackingNumber: String,
