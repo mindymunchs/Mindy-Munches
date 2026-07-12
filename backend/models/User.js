@@ -81,6 +81,7 @@ const userSchema = new mongoose.Schema(
     },
     passwordResetToken: String,
     passwordResetExpires: Date,
+    zohoContactId: { type: String, default: null },
   },
   {
     timestamps: true, // adds createdAt and updatedAt timestamps automatically

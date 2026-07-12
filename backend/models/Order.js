@@ -9,7 +9,8 @@ const orderItemSchema = new mongoose.Schema({
   name: { type: String, required: true },
   price: { type: Number, required: true },
   quantity: { type: Number, required: true, min: 1 },
-  image: String
+  image: String,
+  weight: { type: Number, default: null } // grams — carried from Product.weight.value
 }, { _id: false });
 
 const orderSchema = new mongoose.Schema({
@@ -31,7 +32,8 @@ const orderSchema = new mongoose.Schema({
     city: { type: String, required: true },
     state: { type: String, required: true },
     zipCode: { type: String, required: true },
-    country: { type: String, default: 'India' }
+    country: { type: String, default: 'India' },
+    landmark: { type: String, default: '' }
   },
   paymentMethod: {
     type: String,
@@ -74,7 +76,16 @@ const orderSchema = new mongoose.Schema({
   trackingNumber: String,
   trackingUrl: String,
   courierName: String,
-  deliveredAt: Date
+  deliveredAt: Date,
+  estimatedDeliveryDate: Date,
+  shiprocketOrderId: { type: String, default: null },
+  shiprocketShipmentId: { type: String, default: null },
+  zohoInvoiceId: { type: String, default: null },
+  statusHistory: [{
+    status: String,
+    note: String,
+    updatedAt: { type: Date, default: Date.now }
+  }]
 }, { timestamps: true });
 
 module.exports = mongoose.model('Order', orderSchema);

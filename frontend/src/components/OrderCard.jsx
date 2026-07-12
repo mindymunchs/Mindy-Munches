@@ -194,10 +194,22 @@ const OrderCard = ({ order, index }) => {
                     {order.trackingNumber && (
                       <p className="text-sm text-neutral-600 mt-1">
                         Tracking:{" "}
-                        <span className="font-mono font-medium">
-                          {order.trackingNumber}
-                        </span>
+                        {order.trackingUrl ? (
+                          <a
+                            href={order.trackingUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-mono font-medium text-primary-600 hover:underline"
+                          >
+                            {order.trackingNumber}
+                          </a>
+                        ) : (
+                          <span className="font-mono font-medium">{order.trackingNumber}</span>
+                        )}
                       </p>
+                    )}
+                    {order.courierName && (
+                      <p className="text-xs text-neutral-500 mt-0.5">Courier: {order.courierName}</p>
                     )}
                   </div>
                 </div>

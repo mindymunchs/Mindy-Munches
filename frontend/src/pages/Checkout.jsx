@@ -35,6 +35,8 @@ const Checkout = () => {
   const [errors, setErrors] = useState({});
   const [completedOrderTotal, setCompletedOrderTotal] = useState(null);
   const [paymentError, setPaymentError] = useState(null);
+  const [serviceability, setServiceability] = useState(null); // null | { serviceable, cod }
+  const [serviceabilityLoading, setServiceabilityLoading] = useState(false);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -54,6 +56,27 @@ const Checkout = () => {
       navigate("/cart");
     }
   }, [items.length, navigate, showSuccess]);
+
+  // Pincode serviceability check
+  useEffect(() => {
+    const pincode = orderData.address.pincode;
+    if (!/^\d{6}$/.test(pincode)) { setServiceability(null); return; }
+
+    const timeout = setTimeout(async () => {
+      setServiceabilityLoading(true);
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/shiprocket/serviceability?pincode=${pincode}`);
+        const data = await res.json();
+        if (data.success) setServiceability(data);
+      } catch {
+        setServiceability(null);
+      } finally {
+        setServiceabilityLoading(false);
+      }
+    }, 600); // debounce 600ms
+
+    return () => clearTimeout(timeout);
+  }, [orderData.address.pincode]);
 
   useEffect(() => {
     const loadRazorpayScript = () => {
@@ -457,6 +480,12 @@ const Checkout = () => {
                         placeholder="Pincode"
                       />
                       {errors["address.pincode"] && <p className="text-red-500 text-xs mt-1">{errors["address.pincode"]}</p>}
+                      {serviceabilityLoading && <p className="text-xs text-neutral-400 mt-1">Checking delivery availability...</p>}
+                      {!serviceabilityLoading && serviceability && (
+                        serviceability.serviceable
+                          ? <p className="text-xs text-green-600 mt-1">✓ Delivery available at this pincode</p>
+                          : <p className="text-xs text-red-500 mt-1">⚠ Delivery not available at this pincode</p>
+                      )}
                     </div>
                   </div>
                 </div>

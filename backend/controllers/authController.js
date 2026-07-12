@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const { validationResult } = require("express-validator");
 const User = require("../models/User");
 const emailService = require("../services/emailService");
+const zoho = require("../services/zohoService");
 const crypto = require("crypto");
 const Guest = require("../models/Guest");
 const { OAuth2Client } = require('google-auth-library'); // Add this import
@@ -49,6 +50,11 @@ const register = async (req, res) => {
     });
 
     await user.save();
+
+    // Zoho CRM — sync new user as contact (non-blocking)
+    zoho.syncContact(user).then(async (contactId) => {
+      if (contactId) await User.findByIdAndUpdate(user._id, { zohoContactId: contactId });
+    }).catch(e => console.error('[Zoho CRM] register sync failed:', e.message));
 
     // ** AUTO-SUBSCRIBE TO NEWSLETTER **
     try {

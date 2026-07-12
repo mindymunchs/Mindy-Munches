@@ -4,6 +4,8 @@ const Cart = require('../models/Cart');
 const Product = require('../models/Product');
 const emailService = require('../services/emailService');
 const User = require('../models/User');
+const shiprocket = require('../services/shiprocketService');
+const zoho = require('../services/zohoService');
 
 // Create order
 const createOrder = async (req, res) => {
@@ -21,7 +23,7 @@ const createOrder = async (req, res) => {
 
     // Get user's cart
     const cart = await Cart.findOne({ user: req.user._id })
-      .populate('items.product', 'name price images stock');
+      .populate('items.product', 'name price images stock weight');
 
     if (!cart || cart.items.length === 0) {
       return res.status(400).json({
@@ -82,7 +84,10 @@ const createOrder = async (req, res) => {
       name: item.product.name,
       price: item.price,
       quantity: item.quantity,
-      image: item.product.images?.[0]?.url || ''
+      image: item.product.images?.[0]?.url || '',
+      weight: item.product.weight?.value
+        ? (item.product.weight.unit === 'kg' ? item.product.weight.value * 1000 : item.product.weight.value)
+        : null
     }));
 
     // Generate order number
@@ -106,9 +111,12 @@ const createOrder = async (req, res) => {
 
     await order.save();
 
+    // Fetch user once — used for emails + integrations below
+    const user = await User.findById(req.user._id).catch(() => null);
+
     // Send emails (customer confirmation + admin alert)
     try {
-      const user = await User.findById(req.user._id);
+      if (!user) throw new Error('User not found');
       const orderData = {
         orderId: order._id,
         orderNumber: order.orderNumber,
@@ -144,6 +152,50 @@ const createOrder = async (req, res) => {
 
     // Clear cart
     await cart.clearCart();
+
+    // Shiprocket — auto-create shipment (non-blocking)
+    shiprocket.createShipment({
+      ...order.toObject(),
+      customerEmail: user?.email,
+    }).then(async (result) => {
+      if (result) {
+        await Order.findByIdAndUpdate(order._id, {
+          shiprocketOrderId: result.shiprocketOrderId,
+          shiprocketShipmentId: result.shipmentId,
+          trackingNumber: result.awb,
+          courierName: result.courierName,
+          trackingUrl: result.trackingUrl,
+        });
+        console.log(`[Shiprocket] Shipment created for ${order.orderNumber}`);
+      }
+    }).catch(e => console.error('[Shiprocket] createShipment failed:', e.message));
+
+    // Zoho Books — auto-create invoice (non-blocking)
+    zoho.createInvoice({
+      ...order.toObject(),
+      customerEmail: user?.email,
+    }).then(async (invoiceId) => {
+      if (invoiceId) {
+        await Order.findByIdAndUpdate(order._id, { zohoInvoiceId: invoiceId });
+        console.log(`[Zoho Books] Invoice created for ${order.orderNumber}`);
+      }
+    }).catch(e => console.error('[Zoho Books] createInvoice failed:', e.message));
+
+    // Zoho CRM — log deal (non-blocking)
+    if (user) {
+      (async () => {
+        try {
+          let contactId = user.zohoContactId;
+          if (!contactId) {
+            contactId = await zoho.syncContact(user);
+            if (contactId) await User.findByIdAndUpdate(user._id, { zohoContactId: contactId });
+          }
+          if (contactId) await zoho.logOrderDeal(order.toObject(), contactId);
+        } catch (e) {
+          console.error('[Zoho CRM] order deal failed:', e.message);
+        }
+      })();
+    }
 
     res.status(201).json({
       success: true,

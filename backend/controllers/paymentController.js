@@ -4,6 +4,9 @@ const Order = require("../models/Order");
 const Cart = require("../models/Cart");
 const Product = require("../models/Product");
 const { sendOrderConfirmation, sendAdminOrderAlert } = require("../services/emailService");
+const shiprocket = require("../services/shiprocketService");
+const zoho = require("../services/zohoService");
+const User = require("../models/User");
 const PromoCode = require("../models/PromoCode");
 
 const razorpay = new Razorpay({
@@ -106,14 +109,28 @@ exports.verifyPayment = async (req, res) => {
       .padStart(3, "0");
     const orderNumber = `MM${timestamp.slice(-6)}${random}`;
 
+    // Fetch product weights in one query
+    const productIds = orderDetails.items.map(item => item.product?._id || item._id);
+    const products = await Product.find({ _id: { $in: productIds } }).select('weight');
+    const weightMap = {};
+    products.forEach(p => {
+      if (!p.weight?.value) { weightMap[p._id.toString()] = null; return; }
+      // Normalize to grams
+      weightMap[p._id.toString()] = p.weight.unit === 'kg' ? p.weight.value * 1000 : p.weight.value;
+    });
+
     // Prepare order items
-    const orderItems = orderDetails.items.map((item) => ({
-      product: item.product?._id || item._id,
-      name: item.product?.name || item.name,
-      price: item.price,
-      quantity: item.quantity,
-      image: item.product?.images?.[0]?.url || item.image || "",
-    }));
+    const orderItems = orderDetails.items.map((item) => {
+      const pid = (item.product?._id || item._id)?.toString();
+      return {
+        product: item.product?._id || item._id,
+        name: item.product?.name || item.name,
+        price: item.price,
+        quantity: item.quantity,
+        image: item.product?.images?.[0]?.url || item.image || "",
+        weight: weightMap[pid] || null,
+      };
+    });
 
     // Validate and apply promo code server-side (M-02)
     const subtotal = orderDetails.subtotal || orderDetails.totalAmount;
@@ -224,6 +241,47 @@ exports.verifyPayment = async (req, res) => {
     sendAdminOrderAlert(emailOrderData).catch((e) =>
       console.error("Admin email failed:", e)
     );
+
+    // Shiprocket — auto-create shipment (non-blocking)
+    shiprocket.createShipment({
+      ...savedOrder.toObject(),
+      customerEmail: orderDetails.email,
+    }).then(async (result) => {
+      if (result) {
+        await Order.findByIdAndUpdate(savedOrder._id, {
+          shiprocketOrderId: result.shiprocketOrderId,
+          shiprocketShipmentId: result.shipmentId,
+          trackingNumber: result.awb,
+          courierName: result.courierName,
+          trackingUrl: result.trackingUrl,
+        });
+        console.log(`[Shiprocket] Shipment created for ${savedOrder.orderNumber}`);
+      }
+    }).catch(e => console.error('[Shiprocket] createShipment failed:', e.message));
+
+    // Zoho Books — auto-create invoice (non-blocking)
+    zoho.createInvoice({
+      ...savedOrder.toObject(),
+      customerEmail: orderDetails.email,
+    }).then(async (invoiceId) => {
+      if (invoiceId) {
+        await Order.findByIdAndUpdate(savedOrder._id, { zohoInvoiceId: invoiceId });
+        console.log(`[Zoho Books] Invoice created for ${savedOrder.orderNumber}`);
+      }
+    }).catch(e => console.error('[Zoho Books] createInvoice failed:', e.message));
+
+    // Zoho CRM — log order against contact (non-blocking)
+    if (req.user) {
+      User.findById(req.user._id).then(async (user) => {
+        if (!user) return;
+        let contactId = user.zohoContactId;
+        if (!contactId) {
+          contactId = await zoho.syncContact(user);
+          if (contactId) await User.findByIdAndUpdate(user._id, { zohoContactId: contactId });
+        }
+        if (contactId) await zoho.logOrderDeal(savedOrder.toObject(), contactId);
+      }).catch(e => console.error('[Zoho CRM] order deal failed:', e.message));
+    }
 
     res.json({
       success: true,

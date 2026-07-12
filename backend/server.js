@@ -26,6 +26,7 @@ if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
   process.exit(1);
 }
 
+const zoho = require("./services/zohoService");
 const authRoutes = require("./routes/auth");
 const productRoutes = require("./routes/products");
 const cartRoutes = require("./routes/cart");
@@ -37,6 +38,8 @@ const newsletterRoutes = require("./routes/newsLetter");
 const paymentRoutes = require("./routes/paymentRoutes");
 const feedbackRoutes = require("./routes/feedback");
 const promoCodeRoutes = require("./routes/promoCodes");
+const shiprocketRoutes = require("./routes/shiprocket");
+const zohoRoutes = require("./routes/zoho");
 
 const app = express();
 
@@ -111,6 +114,12 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 
       const savedUser = await newUser.save();
       if (isDev) console.log('New user created successfully');
+
+      // Zoho CRM — sync new Google OAuth user as contact (non-blocking)
+      zoho.syncContact(savedUser).then(async (contactId) => {
+        if (contactId) await User.findByIdAndUpdate(savedUser._id, { zohoContactId: contactId });
+      }).catch(e => console.error('[Zoho CRM] Google OAuth sync failed:', e.message));
+
       done(null, savedUser);
     } catch (error) {
       console.error('Google OAuth error:', error);
@@ -216,6 +225,8 @@ app.use("/api/newsletter", newsletterRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/promo-codes", promoCodeRoutes);
+app.use("/api/shiprocket", shiprocketRoutes);
+app.use("/api/zoho", zohoRoutes);
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
