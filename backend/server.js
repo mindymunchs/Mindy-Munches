@@ -228,7 +228,16 @@ app.use("/api/promo-codes", promoCodeRoutes);
 app.use("/api/shiprocket", shiprocketRoutes);
 app.use("/api/zoho", zohoRoutes);
 
-// Health check endpoint
+// Root + health check
+app.get("/", (req, res) => {
+  res.json({
+    name: "Mindy Munchs API",
+    status: "online",
+    version: "1.0.0",
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.get("/api/health", (req, res) => {
   res.json({
     status: "ok",
