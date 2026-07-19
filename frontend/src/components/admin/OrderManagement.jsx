@@ -121,6 +121,12 @@ const OrderManagement = () => {
         shippingAddress: formatAddress(order.shippingAddress),
         phone: order.shippingAddress?.phone || order.phone || "No phone",
         paymentMethod: order.paymentMethod || "unknown",
+        trackingNumber: order.trackingNumber || null,
+        trackingUrl: order.trackingUrl || null,
+        courierName: order.courierName || null,
+        estimatedDeliveryDate: order.estimatedDeliveryDate || null,
+        shiprocketOrderId: order.shiprocketOrderId || null,
+        zohoInvoiceId: order.zohoInvoiceId || null,
       }));
 
       console.log("✅ Transformed orders:", transformedOrders);
@@ -409,6 +415,69 @@ const OrderManagement = () => {
                     ))}
                   </div>
                 </div>
+
+                {/* Shiprocket Shipping Info */}
+                {(order.trackingNumber || order.shiprocketOrderId || order.zohoInvoiceId) && (
+                  <div className="border-t pt-4 mt-4">
+                    <h4 className="font-medium text-gray-900 mb-2 text-sm">Shipping & Integration</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                      {order.trackingNumber && (
+                        <div className="flex items-center gap-2 bg-blue-50 rounded-lg px-3 py-2">
+                          <span className="text-blue-500">📦</span>
+                          <div>
+                            <p className="text-xs text-gray-500">Tracking Number</p>
+                            {order.trackingUrl ? (
+                              <a href={order.trackingUrl} target="_blank" rel="noopener noreferrer"
+                                className="font-mono font-medium text-blue-600 hover:underline">
+                                {order.trackingNumber}
+                              </a>
+                            ) : (
+                              <p className="font-mono font-medium text-gray-900">{order.trackingNumber}</p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      {order.courierName && (
+                        <div className="flex items-center gap-2 bg-purple-50 rounded-lg px-3 py-2">
+                          <span className="text-purple-500">🚚</span>
+                          <div>
+                            <p className="text-xs text-gray-500">Courier</p>
+                            <p className="font-medium text-gray-900">{order.courierName}</p>
+                          </div>
+                        </div>
+                      )}
+                      {order.estimatedDeliveryDate && (
+                        <div className="flex items-center gap-2 bg-green-50 rounded-lg px-3 py-2">
+                          <span className="text-green-500">📅</span>
+                          <div>
+                            <p className="text-xs text-gray-500">Est. Delivery</p>
+                            <p className="font-medium text-gray-900">
+                              {new Date(order.estimatedDeliveryDate).toLocaleDateString("en-IN")}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {order.shiprocketOrderId && (
+                        <div className="flex items-center gap-2 bg-orange-50 rounded-lg px-3 py-2">
+                          <span className="text-orange-500">🚀</span>
+                          <div>
+                            <p className="text-xs text-gray-500">Shiprocket Order ID</p>
+                            <p className="font-mono font-medium text-gray-900">{order.shiprocketOrderId}</p>
+                          </div>
+                        </div>
+                      )}
+                      {order.zohoInvoiceId && (
+                        <div className="flex items-center gap-2 bg-teal-50 rounded-lg px-3 py-2">
+                          <span className="text-teal-500">🧾</span>
+                          <div>
+                            <p className="text-xs text-gray-500">Zoho Invoice ID</p>
+                            <p className="font-mono font-medium text-gray-900">{order.zohoInvoiceId}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Status Update */}
                 <div className="border-t pt-4 mt-4">
