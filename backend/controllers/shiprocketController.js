@@ -77,7 +77,7 @@ exports.webhook = async (req, res) => {
     // Verify webhook secret if configured
     const secret = process.env.SHIPROCKET_WEBHOOK_SECRET;
     if (secret) {
-      const incoming = req.headers['x-shiprocket-token'] || req.query.token;
+      const incoming = req.headers['x-api-key'] || req.headers['x-shiprocket-token'] || req.query.token;
       if (incoming !== secret) {
         console.warn('[Shiprocket Webhook] Invalid token — request rejected');
         return res.status(401).send('Unauthorized');
