@@ -56,6 +56,21 @@ exports.syncContact = async (user) => {
   try {
     const headers = await crmHeaders();
 
+    // Search for existing contact by email to avoid duplicates
+    if (user.email) {
+      try {
+        const search = await axios.get(
+          `${CRM_BASE}/Contacts/search?email=${encodeURIComponent(user.email)}`,
+          { headers }
+        );
+        const existing = search.data?.data?.[0];
+        if (existing?.id) {
+          console.log(`[Zoho CRM] Contact already exists: ${existing.id}`);
+          return existing.id;
+        }
+      } catch (_) {}
+    }
+
     const payload = {
       data: [{
         First_Name: user.name?.split(' ')[0] || user.name,

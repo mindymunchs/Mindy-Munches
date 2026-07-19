@@ -114,9 +114,8 @@ const createOrder = async (req, res) => {
     // Fetch user once — used for emails + integrations below
     const user = await User.findById(req.user._id).catch(() => null);
 
-    // Send emails (customer confirmation + admin alert)
-    try {
-      if (!user) throw new Error('User not found');
+    // Send emails (non-blocking)
+    if (user) {
       const orderData = {
         orderId: order._id,
         orderNumber: order.orderNumber,
@@ -126,20 +125,13 @@ const createOrder = async (req, res) => {
         shippingAddress,
         paymentMethod,
         paymentStatus: order.paymentStatus,
-        user: user
+        user,
       };
-      
-      // Customer confirmation email
-      await emailService.sendOrderConfirmation(user.email, orderData);
-      console.log(`✅ Order confirmation email sent to ${user.email}`);
-      
-      // Admin alert email
-      await emailService.sendAdminOrderAlert(orderData);
-      console.log(`✅ Admin alert email sent`);
-      
-    } catch (emailError) {
-      console.error('❌ Failed to send emails:', emailError);
-      // Don't fail the order if email fails
+      emailService.sendOrderConfirmation(user.email, orderData)
+        .then(() => console.log(`✅ Order confirmation email sent to ${user.email}`))
+        .catch(e => console.error('❌ Customer email failed:', e.message));
+      emailService.sendAdminOrderAlert(orderData)
+        .catch(e => console.error('❌ Admin email failed:', e.message));
     }
 
     // Update product stock

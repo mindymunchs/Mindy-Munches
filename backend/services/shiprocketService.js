@@ -72,7 +72,7 @@ exports.createShipment = async (order) => {
 
   const payload = {
     order_id: order.orderNumber,
-    order_date: new Date(order.createdAt).toISOString().split('T')[0],
+    order_date: new Date(order.createdAt || Date.now()).toISOString().split('T')[0],
     pickup_location: process.env.SHIPROCKET_PICKUP_LOCATION || 'Primary',
     comment: order.notes || '',
     billing_customer_name: addr.name,

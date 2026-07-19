@@ -36,6 +36,13 @@ exports.getTracking = async (req, res) => {
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
 
+    // Only allow order owner or admin
+    const isOwner = order.user?.toString() === req.user._id.toString();
+    const isAdmin = req.user.role === 'admin';
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+
     if (!order.trackingNumber) {
       return res.json({ success: true, data: null, message: 'No tracking number yet' });
     }
@@ -67,6 +74,16 @@ exports.checkServiceability = async (req, res) => {
 // Webhook — Shiprocket pushes status updates here
 exports.webhook = async (req, res) => {
   try {
+    // Verify webhook secret if configured
+    const secret = process.env.SHIPROCKET_WEBHOOK_SECRET;
+    if (secret) {
+      const incoming = req.headers['x-shiprocket-token'] || req.query.token;
+      if (incoming !== secret) {
+        console.warn('[Shiprocket Webhook] Invalid token — request rejected');
+        return res.status(401).send('Unauthorized');
+      }
+    }
+
     const { awb, current_status, order_id } = req.body;
 
     const statusMap = {
