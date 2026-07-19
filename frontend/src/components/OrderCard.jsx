@@ -31,8 +31,8 @@ const OrderCard = ({ order, index }) => {
     if (order.orderStatus === "delivered") {
       return `Delivered on ${formatDate(order.updatedAt)}`;
     }
-    if (order.estimatedDelivery) {
-      return `Expected delivery: ${formatDate(order.estimatedDelivery)}`;
+    if (order.estimatedDeliveryDate) {
+      return `Expected delivery: ${formatDate(order.estimatedDeliveryDate)}`;
     }
     return "Delivery date will be updated soon";
   };
