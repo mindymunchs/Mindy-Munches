@@ -153,6 +153,69 @@ exports.logOrderDeal = async (order, zohoContactId) => {
  * Create a GST invoice in Zoho Books for an order.
  * Returns zohoInvoiceId (string) or null.
  */
+// Create or find a Zoho Books customer, returns customer_id
+const searchBooksCustomer = async (orgId, headers, { email, name }) => {
+  // Search by email
+  if (email) {
+    try {
+      const res = await axios.get(
+        `${BOOKS_BASE}/contacts?organization_id=${orgId}&contact_type=customer&search_text=${encodeURIComponent(email)}`,
+        { headers }
+      );
+      const match = res.data?.contacts?.find(c => c.email === email);
+      if (match?.contact_id) return match.contact_id;
+    } catch (_) {}
+  }
+  // Search by name
+  try {
+    const res = await axios.get(
+      `${BOOKS_BASE}/contacts?organization_id=${orgId}&contact_type=customer&search_text=${encodeURIComponent(name)}`,
+      { headers }
+    );
+    const match = res.data?.contacts?.find(c => c.contact_name === name);
+    if (match?.contact_id) return match.contact_id;
+  } catch (_) {}
+  return null;
+};
+
+const getOrCreateBooksCustomer = async (order, headers) => {
+  const orgId = process.env.ZOHO_ORG_ID;
+  const email = order.customerEmail || '';
+  const name  = order.shippingAddress.name;
+
+  // Try to find existing customer first
+  const existingId = await searchBooksCustomer(orgId, headers, { email, name });
+  if (existingId) return existingId;
+
+  // Create new customer
+  try {
+    const res = await axios.post(
+      `${BOOKS_BASE}/contacts?organization_id=${orgId}`,
+      {
+        contact_name: name,
+        contact_type: 'customer',
+        email,
+        phone: (order.shippingAddress.phone || '').replace(/\D/g, '').slice(-10),
+        billing_address: {
+          address: (order.shippingAddress.street || '').substring(0, 99),
+          city: order.shippingAddress.city,
+          state: order.shippingAddress.state,
+          zip: order.shippingAddress.zipCode,
+          country: order.shippingAddress.country || 'India',
+        },
+      },
+      { headers }
+    );
+    return res.data?.contact?.contact_id || null;
+  } catch (err) {
+    // If duplicate name error (code 3062), search and return existing
+    if (err.response?.data?.code === 3062) {
+      return await searchBooksCustomer(orgId, headers, { email, name });
+    }
+    throw err;
+  }
+};
+
 exports.createInvoice = async (order) => {
   if (!isConfigured() || !process.env.ZOHO_ORG_ID) {
     console.log('[Zoho Books] Skipped — credentials not configured');
@@ -162,17 +225,15 @@ exports.createInvoice = async (order) => {
   try {
     const headers = await booksHeaders();
 
+    // Ensure customer exists in Zoho Books
+    const customerId = await getOrCreateBooksCustomer(order, headers);
+    if (!customerId) {
+      console.error('[Zoho Books] Could not create/find customer');
+      return null;
+    }
+
     const payload = {
-      customer_name: order.shippingAddress.name,
-      email: order.customerEmail || '',
-      phone: order.shippingAddress.phone,
-      billing_address: {
-        address: order.shippingAddress.street,
-        city: order.shippingAddress.city,
-        state: order.shippingAddress.state,
-        zip: order.shippingAddress.zipCode,
-        country: order.shippingAddress.country || 'India',
-      },
+      customer_id: customerId,
       line_items: order.items.map(item => ({
         name: item.name,
         quantity: item.quantity,

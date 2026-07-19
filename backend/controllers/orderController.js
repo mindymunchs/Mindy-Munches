@@ -23,7 +23,7 @@ const createOrder = async (req, res) => {
 
     // Get user's cart
     const cart = await Cart.findOne({ user: req.user._id })
-      .populate('items.product', 'name price images stock weight');
+      .populate('items.product', 'name price images stock weight isActive');
 
     if (!cart || cart.items.length === 0) {
       return res.status(400).json({
