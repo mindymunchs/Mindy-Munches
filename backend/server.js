@@ -228,6 +228,10 @@ app.use("/api/promo-codes", promoCodeRoutes);
 app.use("/api/shiprocket", shiprocketRoutes);
 app.use("/api/zoho", zohoRoutes);
 
+// Webhook alias — Shiprocket blocks URLs containing "shiprocket" in path
+const { webhook: shipmentWebhook } = require("./controllers/shiprocketController");
+app.post("/api/delivery/update", shipmentWebhook);
+
 // Root + health check
 app.get("/", (req, res) => {
   res.json({
