@@ -84,7 +84,7 @@ exports.webhook = async (req, res) => {
       }
     }
 
-    const { awb, current_status, order_id } = req.body;
+    const { awb, current_status, order_id, channel_order_id, courier_name, etd } = req.body;
 
     const statusMap = {
       'Pickup Scheduled': 'processing',
@@ -102,10 +102,14 @@ exports.webhook = async (req, res) => {
     const newStatus = statusMap[current_status];
     if (!newStatus) return res.status(200).send('OK');
 
+    // awb comes as a number — convert to string for comparison
+    const awbStr = awb?.toString();
+
     const order = await Order.findOne({
       $or: [
-        { trackingNumber: awb },
-        { shiprocketOrderId: order_id?.toString() }
+        { trackingNumber: awbStr },
+        { orderNumber: channel_order_id },
+        { shiprocketOrderId: order_id?.toString() },
       ]
     });
 
@@ -113,6 +117,8 @@ exports.webhook = async (req, res) => {
 
     order.orderStatus = newStatus;
     if (newStatus === 'delivered') order.deliveredAt = new Date();
+    if (courier_name) order.courierName = courier_name;
+    if (etd) order.estimatedDeliveryDate = new Date(etd);
 
     order.statusHistory = order.statusHistory || [];
     order.statusHistory.push({ status: newStatus, note: `Shiprocket: ${current_status}`, updatedAt: new Date() });
